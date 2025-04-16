@@ -5,116 +5,218 @@
 .DESCRIPTION
    This script:
     1. Checks the status of key Windows services related to smart cards.
-    2. Attempts to list any smart card readers it detects.
-    3. Retrieves the 20 most recent related event log entries containing 'smart card' or 'SCard'.
-    4. Compiles the findings into an HTML report and saves it to C:\Temp\SmartCardReport.html.
+    2. Attempts to list any smart card readers and relevant info (if available).
+    3. Retrieves recent related event log entries from both Application and System logs containing 'smart card' or 'SCard'.
+    4. (Optional) Attempts to execute certutil -scinfo to probe the smart card subsystem further if certutil is available.
+    5. Compiles the findings into an HTML report.
 
-.NOTES
-   Written for demonstration purposes. Customize for your environment.
+.PARAMETER ReportPath
+   The file path where the HTML report will be saved. Defaults to C:\Temp\SmartCardReport_<timestamp>.html
+
+.PARAMETER MaxEvents
+   The maximum number of events to retrieve from each log.
+
+.PARAMETER CheckCertUtil
+   If $true, attempts a certutil -scinfo command to collect additional info.
 
 .EXAMPLE
-   .\TroubleshootSmartCard.ps1
+   .\TroubleshootSmartCard.ps1 -ReportPath "C:\Temp\MyReport.html" -MaxEvents 50 -CheckCertUtil $true
+
+.NOTES
+   Requires Administrator privileges.
 #>
 
-# Ensure script is running with adequate permissions:
-if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(`
-    [Security.Principal.WindowsBuiltInRole] "Administrator")) {
-    Write-Host "You must run this script as an Administrator!" 
+[CmdletBinding()]
+Param(
+    [string]
+    $ReportPath = "C:\Temp\SmartCardReport_{0:yyyy-MM-dd_HH-mm-ss}.html" -f (Get-Date),
+
+    [int]
+    $MaxEvents = 20,
+
+    [switch]
+    $CheckCertUtil
+)
+
+Set-StrictMode -Version Latest
+
+# Ensure script is running with Administrator privileges:
+if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
+    [Security.Principal.WindowsBuiltInRole] "Administrator"))
+{
+    Write-Host "You must run this script as an Administrator!"
     exit 1
 }
 
-# Define output report path
-$reportPath = "C:\Temp\SmartCardReport.html"
+# Create directory if it doesn't exist
+$reportDir = Split-Path $ReportPath
+if (-not (Test-Path $reportDir)) {
+    try {
+        New-Item -ItemType Directory -Path $reportDir -ErrorAction Stop | Out-Null
+    }
+    catch {
+        Write-Error "Failed to create directory $reportDir. Error: $_"
+        exit 1
+    }
+}
 
-# Create a collection of objects to convert to HTML
-$reportData = @()
+# A list of results that will be combined into HTML later
+$reportSections = New-Object System.Collections.Generic.List[System.Object]
 
-# 1. Check the status of key smart card services
+#------------------------------------------------------------------------------
+# 1. Check the status of key Windows services
+#------------------------------------------------------------------------------
 $servicesToCheck = @(
-    "SCardSvr",      # Smart Card service
-    "ScDeviceEnum",  # Smart Card Device Enumeration Service (on some systems)
-    "SCPolicySvc"    # Smart Card Removal Policy
+    "SCardSvr",       # Smart Card service
+    "ScDeviceEnum",   # Smart Card Device Enumeration Service (on some systems)
+    "SCPolicySvc"     # Smart Card Removal Policy
 )
 
-foreach ($serviceName in $servicesToCheck) {
-    $service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
-    if ($service) {
-        $reportData += [pscustomobject]@{
-            Section      = "Service Status"
-            Name         = $serviceName
-            Status       = $service.Status
-            StartType    = (Get-WmiObject Win32_Service -Filter "Name='$serviceName'").StartMode
+$serviceReport = foreach ($serviceName in $servicesToCheck) {
+    $serviceObj = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+    if ($serviceObj) {
+        [pscustomobject]@{
+            ServiceName = $serviceObj.Name
+            Status      = $serviceObj.Status
+            StartType   = (Get-WmiObject Win32_Service -Filter "Name='$serviceName'").StartMode
         }
-    } else {
-        $reportData += [pscustomobject]@{
-            Section      = "Service Status"
-            Name         = $serviceName
-            Status       = "Service not found"
-            StartType    = "N/A"
+    }
+    else {
+        [pscustomobject]@{
+            ServiceName = $serviceName
+            Status      = "Service not found"
+            StartType   = "N/A"
         }
     }
 }
 
-# 2. Attempt to list any detected smart card readers
+$reportSections.Add(
+    ("<h3>1. Smart Card Services Status</h3>" +
+     ($serviceReport | ConvertTo-Html -Fragment -Property ServiceName,Status,StartType))
+)
+
+#------------------------------------------------------------------------------
+# 2. Attempt to list any detected smart card readers (via WMI)
+#------------------------------------------------------------------------------
 try {
     $readers = Get-WmiObject -Class Win32_SmartCardReader -ErrorAction Stop
     if ($readers) {
-        foreach ($reader in $readers) {
-            $reportData += [pscustomobject]@{
-                Section  = "Smart Card Readers"
-                Name     = $reader.DeviceName
-                Status   = "Detected"
+        $readerReport = foreach ($reader in $readers) {
+            [pscustomobject]@{
+                ReaderName     = $reader.DeviceName
+                DeviceID       = $reader.DeviceID
+                Status         = "Detected"
             }
         }
-    } else {
-        $reportData += [pscustomobject]@{
-            Section  = "Smart Card Readers"
-            Name     = "None"
-            Status   = "No smart card readers found"
-        }
     }
-} catch {
-    $reportData += [pscustomobject]@{
-        Section  = "Smart Card Readers"
-        Name     = "Error"
-        Status   = "Could not query smart card readers (Win32_SmartCardReader unavailable)"
+    else {
+        $readerReport = ,([pscustomobject]@{
+            ReaderName     = "None"
+            DeviceID       = "N/A"
+            Status         = "No smart card readers found"
+        })
     }
 }
+catch {
+    $readerReport = ,([pscustomobject]@{
+        ReaderName     = "Error"
+        DeviceID       = "N/A"
+        Status         = "Could not query smart card readers (Win32_SmartCardReader unavailable)"
+    })
+}
 
+$reportSections.Add(
+    ("<h3>2. Smart Card Readers</h3>" +
+     ($readerReport | ConvertTo-Html -Fragment -Property ReaderName,DeviceID,Status))
+)
+
+#------------------------------------------------------------------------------
 # 3. Retrieve recent event logs for errors or warnings related to 'smart card' or 'SCard'
-$events = Get-EventLog -LogName Application -Newest 200 `
-    | Where-Object { $_.Message -match "smart card|scard" } `
-    | Select-Object -First 20
+#------------------------------------------------------------------------------
+$LogNames = @("Application","System")
+$logReport = @()
 
-if ($events) {
-    foreach ($event in $events) {
-        $reportData += [pscustomobject]@{
-            Section     = "Event Log"
-            EventID     = $event.EventID
-            Source      = $event.Source
-            TimeWritten = $event.TimeWritten
-            Message     = $event.Message -replace "`r|`n", ' ' # replace new lines for cleaner display
+foreach ($logName in $LogNames) {
+    $events = Get-EventLog -LogName $logName -Newest 500 -ErrorAction SilentlyContinue |
+        Where-Object { $_.Message -match "smart card|scard" } |
+        Select-Object -First $MaxEvents
+
+    if ($events) {
+        foreach ($evt in $events) {
+            $logReport += [pscustomobject]@{
+                LogName     = $logName
+                EventID     = $evt.EventID
+                EntryType   = $evt.EntryType
+                Source      = $evt.Source
+                TimeWritten = $evt.TimeWritten
+                Message     = ($evt.Message -replace "`r|`n"," ")
+            }
         }
     }
-} else {
-    $reportData += [pscustomobject]@{
-        Section     = "Event Log"
-        EventID     = "N/A"
-        Source      = "N/A"
-        TimeWritten = "N/A"
-        Message     = "No relevant recent events found."
+    else {
+        $logReport += [pscustomobject]@{
+            LogName     = $logName
+            EventID     = "N/A"
+            EntryType   = "N/A"
+            Source      = "N/A"
+            TimeWritten = "N/A"
+            Message     = "No relevant events found."
+        }
     }
 }
 
-# Generate HTML report
-# ConvertTo-Html will generate an HTML table from $reportData
-$htmlReport = $reportData |
-    Sort-Object Section, Name |
-    ConvertTo-Html -Title "Smart Card Troubleshooting Report" `
-                   -PreContent "<h2>Smart Card Troubleshooting Results</h2>" `
-                   -PostContent "<p>Report generated on $(Get-Date)</p>"
+$reportSections.Add(
+    ("<h3>3. Relevant Smart Card Event Logs</h3>" +
+     ($logReport | Sort-Object LogName, TimeWritten -Descending |
+      ConvertTo-Html -Fragment -Property LogName,EventID,EntryType,Source,TimeWritten,Message))
+)
 
-# Write HTML report to file
-$htmlReport | Out-File -FilePath $reportPath -Encoding utf8
+#------------------------------------------------------------------------------
+# 4. Optional: Attempt certutil -scinfo if available
+#------------------------------------------------------------------------------
+if ($CheckCertUtil) {
+    Write-Host "Running certutil -scinfo..."
+    $certutilPath = (Get-Command "certutil.exe" -ErrorAction SilentlyContinue)?.Source
+    if ($certutilPath) {
+        try {
+            $certutilOutput = certutil -scinfo 2>&1
+            $reportSections.Add("<h3>4. Certutil -scinfo Output</h3><pre>$certutilOutput</pre>")
+        }
+        catch {
+            $reportSections.Add("<h3>4. Certutil -scinfo Output</h3><p>Error running certutil: $_</p>")
+        }
+    }
+    else {
+        $reportSections.Add("<h3>4. Certutil -scinfo Output</h3><p>certutil.exe not found on this system.</p>")
+    }
+}
 
-Write-Host "Smart Card Troubleshooting Report generated at: $reportPath"
+#------------------------------------------------------------------------------
+# Combine HTML and output
+#------------------------------------------------------------------------------
+# Build final HTML
+$htmlHeader = @"
+<html>
+<head>
+    <meta charset='UTF-8'>
+    <title>Smart Card Troubleshooting Report</title>
+</head>
+<body>
+    <h2>Smart Card Troubleshooting Report</h2>
+    <p>Report generated on $(Get-Date)</p>
+"@
+
+$htmlFooter = @"
+</body>
+</html>
+"@
+
+$htmlBody = $reportSections -join "<br/>"
+$fullHtml = $htmlHeader + $htmlBody + $htmlFooter
+
+try {
+    $fullHtml | Out-File -FilePath $ReportPath -Encoding UTF8
+    Write-Host "Smart Card Troubleshooting Report generated at: $ReportPath"
+} catch {
+    Write-Error "Failed to write report to $ReportPath. Error: $_"
+}
