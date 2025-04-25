@@ -1,169 +1,186 @@
 
 <#
 .SYNOPSIS
-    Graphical tool that watches a list of devices and pops a notification when a device that was offline comes online.
+    Device Status Monitor – enhanced edition.
 
 .DESCRIPTION
-    * Maintains a JSON file (devices.json) beside the script to persist the list.
-    * Lets you add‑or‑remove devices by name or IP from the GUI.
-    * Pings every 30 seconds, shows current status, and raises a balloon‑tip when the state changes from Offline → Online.
-    * Written entirely with Windows Forms so it runs anywhere PowerShell 5+ is available (no external modules required).
-    * Forward‑looking: all data is saved automatically so the next time you start the tool it picks up right where you left off.
+    Adds the following upgrades:
+        • Configurable polling interval (seconds)
+        • Windows 10/11 Toast notifications (falls back to balloon‑tip) + sound cue
+        • Multi‑ping confirmation (3 consecutive failures → Offline)
+        • Parallel ping engine for scalability
+        • Group / Location column so devices can be categorised
+
+    The script persists the device list (with group) plus live status & failure counters in devices.json.
+    Requires **PowerShell 5.1+**. Toasts use the BurntToast module if available, otherwise classic balloon tips.
 
 .NOTES
-    Author: ChatGPT  |  Date: 2025‑04‑25
+    Author: ChatGPT | Rev: 2025‑04‑25
 #>
 
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
-$JsonPath = Join-Path $PSScriptRoot 'devices.json'
-if (-not (Test-Path $JsonPath)) { '[]' | Set-Content -Path $JsonPath -Encoding UTF8 }
+# Paths & constants -----------------------------------------------------------------------------
+$JsonPath   = Join-Path $PSScriptRoot 'devices.json'
+$PingCount  = 3                # multi‑ping threshold
 
-# Load the persisted list --------------------------------------------------------------------
-$devices = Get-Content -Path $JsonPath -Raw | ConvertFrom-Json
+# Ensure JSON file exists -----------------------------------------------------------------------
+if (-not (Test-Path $JsonPath)) { '[]' | Set-Content $JsonPath -Encoding UTF8 }
+
+# Load persisted list ---------------------------------------------------------------------------
+$devices = Get-Content $JsonPath -Raw | ConvertFrom-Json | ForEach-Object {
+    $_ | Add-Member -NotePropertyName ConsecutiveFailures -NotePropertyValue 0 -Force
+    $_
+}
 if (-not $devices) { $devices = @() }
 
-# ---------------------------------------------------------------------------------------------------------------------
-#   GUI CONSTRUCTION
-# ---------------------------------------------------------------------------------------------------------------------
-$form                   = New-Object System.Windows.Forms.Form
-$form.Text              = 'Device Status Monitor'
-$form.Size              = New-Object System.Drawing.Size(620, 420)
-$form.StartPosition     = 'CenterScreen'
-$form.Topmost           = $true
+# ------------------------------------------------------------------------------------------------
+#   GUI BUILD (Windows Forms)
+# ------------------------------------------------------------------------------------------------
+$form               = New-Object System.Windows.Forms.Form
+$form.Text          = 'Device Status Monitor'
+$form.Size          = [Drawing.Size]::new(720,470)
+$form.StartPosition = 'CenterScreen'
+$form.Topmost       = $true
 
-# Data grid -----------------------------------------------------------------------------------
-$dgv                    = New-Object System.Windows.Forms.DataGridView
-$dgv.Location           = New-Object System.Drawing.Point(10,10)
-$dgv.Size               = New-Object System.Drawing.Size(580,260)
+# DataGrid --------------------------------------------------------------------------------------
+$dgv                = New-Object System.Windows.Forms.DataGridView
+$dgv.Location       = [Drawing.Point]::new(10,10)
+$dgv.Size           = [Drawing.Size]::new(680,300)
 $dgv.AllowUserToAddRows = $false
 $dgv.RowHeadersVisible  = $false
 $dgv.SelectionMode      = 'FullRowSelect'
 
-[void]$dgv.Columns.Add('Name',   'Name')
+[void]$dgv.Columns.Add('Name','Name')
 [void]$dgv.Columns.Add('Address','IP / Hostname')
-$statusCol              = $dgv.Columns.Add('Status','Status')
+[void]$dgv.Columns.Add('Group','Group')
+$statusCol          = $dgv.Columns.Add('Status','Status')
 $dgv.Columns[$statusCol].ReadOnly = $true
 
 $form.Controls.Add($dgv)
 
-# Input controls ------------------------------------------------------------------------------
-$lblName                = New-Object System.Windows.Forms.Label
-$lblName.Text           = 'Name:'
-$lblName.Location       = New-Object System.Drawing.Point(10,285)
-$form.Controls.Add($lblName)
+# Input controls --------------------------------------------------------------------------------
+$lblName        = New-Object System.Windows.Forms.Label -Property @{Text='Name:';Location=[Drawing.Point]::new(10,325)}
+$txtName        = New-Object System.Windows.Forms.TextBox -Property @{Location=[Drawing.Point]::new(60,322);Size=[Drawing.Size]::new(120,22)}
+$lblIP          = New-Object System.Windows.Forms.Label -Property @{Text='IP/Host:';Location=[Drawing.Point]::new(200,325)}
+$txtIP          = New-Object System.Windows.Forms.TextBox -Property @{Location=[Drawing.Point]::new(260,322);Size=[Drawing.Size]::new(120,22)}
+$lblGroup       = New-Object System.Windows.Forms.Label -Property @{Text='Group:';Location=[Drawing.Point]::new(400,325)}
+$txtGroup       = New-Object System.Windows.Forms.TextBox -Property @{Location=[Drawing.Point]::new(450,322);Size=[Drawing.Size]::new(120,22)}
+$btnAdd         = New-Object System.Windows.Forms.Button -Property @{Text='Add';Location=[Drawing.Point]::new(590,320)}
+$btnRemove      = New-Object System.Windows.Forms.Button -Property @{Text='Remove Selected';Location=[Drawing.Point]::new(10,355)}
 
-$txtName                = New-Object System.Windows.Forms.TextBox
-$txtName.Location       = New-Object System.Drawing.Point(60,282)
-$txtName.Size           = New-Object System.Drawing.Size(140,22)
-$form.Controls.Add($txtName)
+# Polling interval selector ---------------------------------------------------------------------
+$lblInterval    = New-Object System.Windows.Forms.Label -Property @{Text='Interval (s):';Location=[Drawing.Point]::new(200,355)}
+$numInterval    = New-Object System.Windows.Forms.NumericUpDown -Property @{
+                        Location=[Drawing.Point]::new(280,352);
+                        Minimum=5;Maximum=900;Value=30;Increment=5;Width=60 }
+$form.Controls.AddRange(@($lblName,$txtName,$lblIP,$txtIP,$lblGroup,$txtGroup,$btnAdd,$btnRemove,$lblInterval,$numInterval))
 
-$lblIP                  = New-Object System.Windows.Forms.Label
-$lblIP.Text             = 'IP / Hostname:'
-$lblIP.Location         = New-Object System.Drawing.Point(220,285)
-$form.Controls.Add($lblIP)
+# Tray icon -------------------------------------------------------------------------------------
+$notify             = New-Object System.Windows.Forms.NotifyIcon
+$notify.Icon        = [System.Drawing.Icon]::ExtractAssociatedIcon((Get-Command powershell).Source)
+$notify.Visible     = $true
 
-$txtIP                  = New-Object System.Windows.Forms.TextBox
-$txtIP.Location         = New-Object System.Drawing.Point(320,282)
-$txtIP.Size             = New-Object System.Drawing.Size(140,22)
-$form.Controls.Add($txtIP)
-
-$btnAdd                 = New-Object System.Windows.Forms.Button
-$btnAdd.Text            = 'Add Device'
-$btnAdd.Location        = New-Object System.Drawing.Point(480,280)
-$form.Controls.Add($btnAdd)
-
-$btnRemove              = New-Object System.Windows.Forms.Button
-$btnRemove.Text         = 'Remove Selected'
-$btnRemove.Location     = New-Object System.Drawing.Point(10,320)
-$form.Controls.Add($btnRemove)
-
-# System tray / balloon‑tip -------------------------------------------------------------------
-$notify                 = New-Object System.Windows.Forms.NotifyIcon
-$notify.Icon            = [System.Drawing.Icon]::ExtractAssociatedIcon((Get-Command powershell).Source)
-$notify.Visible         = $true
-
-# ---------------------------------------------------------------------------------------------------------------------
+# Helpers ---------------------------------------------------------------------------------------
 function Save-Devices {
-    param([Array]$list)
-    $list | ConvertTo-Json -Depth 3 | Set-Content -Path $JsonPath -Encoding UTF8
+    $devices | Select-Object Name,Address,Group,Status,ConsecutiveFailures |
+        ConvertTo-Json -Depth 3 | Set-Content $JsonPath -Encoding UTF8
 }
 
-# Seed the grid with the last‑known list -------------------------------------------------------
-foreach ($dev in $devices) {
-    $rowIdx              = $dgv.Rows.Add($dev.Name, $dev.Address, $dev.Status)
-    $dgv.Rows[$rowIdx].Tag = $dev.Status  # Track previous status per row
+function Show-Toast {
+    param($title,$text)
+    try {
+        if (-not (Get-Module -ListAvailable -Name BurntToast)) { throw 'BurntToast missing' }
+        Import-Module BurntToast -ErrorAction Stop | Out-Null
+        New-BurntToastNotification -Text $title,$text
+    } catch {
+        # fallback balloon tip
+        $notify.BalloonTipTitle = $title
+        $notify.BalloonTipText  = $text
+        $notify.ShowBalloonTip(5000)
+    }
+    [System.Media.SystemSounds]::Exclamation.Play()
 }
 
-# ADD ---------------------------------------------------------------------------------------------------------------
+# Seed grid -------------------------------------------------------------------------------------
+foreach ($d in $devices) {
+    $row=$dgv.Rows.Add($d.Name,$d.Address,$d.Group,$d.Status)
+    $dgv.Rows[$row].Tag=$d.Status
+}
+
+# Add device ------------------------------------------------------------------------------------
 $btnAdd.Add_Click({
-    $name = $txtName.Text.Trim()
-    $addr = $txtIP.Text.Trim()
+    $name=$txtName.Text.Trim(); $addr=$txtIP.Text.Trim(); $grp=$txtGroup.Text.Trim()
     if ($name -and $addr) {
-        $rowIdx              = $dgv.Rows.Add($name,$addr,'Unknown')
-        $dgv.Rows[$rowIdx].Tag = 'Unknown'
-        $devices += [PSCustomObject]@{Name=$name;Address=$addr;Status='Unknown'}
-        Save-Devices $devices
-        $txtName.Clear(); $txtIP.Clear()
+        $row=$dgv.Rows.Add($name,$addr,$grp,'Unknown')
+        $dgv.Rows[$row].Tag='Unknown'
+        $devices += [PSCustomObject]@{Name=$name;Address=$addr;Group=$grp;Status='Unknown';ConsecutiveFailures=0}
+        Save-Devices
+        $txtName.Clear();$txtIP.Clear();$txtGroup.Clear()
     }
 })
 
-# REMOVE ------------------------------------------------------------------------------------------------------------
+# Remove ----------------------------------------------------------------------------------------
 $btnRemove.Add_Click({
     foreach ($row in @($dgv.SelectedRows)) {
-        $name = $row.Cells[0].Value
+        $name=$row.Cells[0].Value
         $dgv.Rows.Remove($row)
         $devices = $devices | Where-Object { $_.Name -ne $name }
     }
-    Save-Devices $devices
+    Save-Devices
 })
 
-# ------------------------------------------------------------------------------------------------------------------
-#   MONITOR LOOP (30‑second ping cycle)
-# ------------------------------------------------------------------------------------------------------------------
-$timer           = New-Object System.Windows.Forms.Timer
-$timer.Interval  = 30000  # milliseconds
-
-$timer.Add_Tick({
-    for ($i=0; $i -lt $dgv.Rows.Count; $i++) {
-        $row      = $dgv.Rows[$i]
-        $name     = $row.Cells[0].Value
-        $addr     = $row.Cells[1].Value
-        $online   = $false
-        try {
-            $online = Test-Connection -ComputerName $addr -Count 1 -Quiet -TimeoutSeconds 2
-        } catch {}
-
-        $status   = $online ? 'Online' : 'Offline'
-        $prev     = $row.Tag
-
-        # Colour code & text update ---------------------------------------------------------------------
-        $row.Cells[2].Value            = $status
-        $row.Cells[2].Style.ForeColor  = if ($online) { [System.Drawing.Color]::Green } else { [System.Drawing.Color]::Red }
-        $row.Tag                       = $status
-
-        # Persist current status in the backing array ---------------------------------------------------
-        for ($d=0; $d -lt $devices.Count; $d++) {
-            if ($devices[$d].Name -eq $name) { $devices[$d].Status = $status; break }
+# Parallel ping engine --------------------------------------------------------------------------
+function Invoke-PingBatch {
+    param([System.Collections.IList]$deviceRows)
+    $runspaces = [runspacefactory]::CreateRunspacePool(1,10); $runspaces.Open()
+    $jobs = @()
+    foreach ($row in $deviceRows) {
+        $addr=$row.Cells[1].Value
+        $ps = [powershell]::Create()
+        $ps.RunspacePool=$runspaces
+        [void]$ps.AddScript("Test-Connection -ComputerName '$addr' -Count 1 -Quiet -TimeoutSeconds 2")
+        $jobs += [pscustomobject]@{Row=$row;PS=$ps;Handle=$ps.BeginInvoke()}
+    }
+    foreach ($j in $jobs) {
+        $result=$j.PS.EndInvoke($j.Handle)
+        $j.PS.Dispose()
+        $online=[bool]$result
+        # device object lookup --------------------------------------------------------------
+        $name=$j.Row.Cells[0].Value
+        $device=$devices | Where-Object Name -eq $name
+        if (-not $device) { continue }
+        if ($online) {
+            $device.ConsecutiveFailures=0
+            $status='Online'
+        } else {
+            $device.ConsecutiveFailures++
+            $status= if ($device.ConsecutiveFailures -ge $PingCount) {'Offline'} else {'Online'}
         }
-
-        # Notify on OFFLINE → ONLINE transition ---------------------------------------------------------
+        $prev=$j.Row.Tag
+        $j.Row.Cells[3].Value=$status
+        $j.Row.Cells[3].Style.ForeColor = if ($status -eq 'Online') {[System.Drawing.Color]::Green} elseif ($status -eq 'Offline'){[System.Drawing.Color]::Red} else {[System.Drawing.Color]::Orange}
+        $j.Row.Tag=$status
+        $device.Status=$status
+        # Notification on Offline→Online ----------------------------------------------------
         if ($prev -eq 'Offline' -and $status -eq 'Online') {
-            $notify.BalloonTipTitle = 'Device Online'
-            $notify.BalloonTipText  = "$name ($addr) is now online."
-            $notify.ShowBalloonTip(5000)
+            Show-Toast 'Device Online' "$name ($addr) is now online."
         }
     }
-    Save-Devices $devices
-})
+    $runspaces.Close();$runspaces.Dispose()
+}
 
+# Timer -----------------------------------------------------------------------------------------
+$timer          = New-Object System.Windows.Forms.Timer
+$timer.Interval = ($numInterval.Value) * 1000
+$timer.Add_Tick({ Invoke-PingBatch $dgv.Rows; Save-Devices })
 $timer.Start()
 
-$form.Add_FormClosing({
-    $notify.Dispose()
-    $timer.Stop()
-    Save-Devices $devices
-})
+# Dynamic interval change -----------------------------------------------------------------------
+$numInterval.Add_ValueChanged({ $timer.Interval = ($numInterval.Value)*1000 })
+
+# On close --------------------------------------------------------------------------------------
+$form.Add_FormClosing({ $timer.Stop(); Save-Devices; $notify.Dispose() })
 
 [void]$form.ShowDialog()
