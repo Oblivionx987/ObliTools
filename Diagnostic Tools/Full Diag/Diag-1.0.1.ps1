@@ -46,105 +46,94 @@ $global:ErrorLog = @()
 
 Write-Host "`nStarting extended diagnostics collection...`n"
 
-# ======================================================
-# 1. SYSTEM INFORMATION
-# ======================================================
-Write-Host "Collecting system information..."
+# Optimize redundant operations by caching frequently used data
+$now = Get-Date
 $compSys  = Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction SilentlyContinue
-if (-not $compSys) { $global:ErrorLog += "Failed to retrieve Win32_ComputerSystem information." }
 $operSys  = Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction SilentlyContinue
-if (-not $operSys) { $global:ErrorLog += "Failed to retrieve Win32_OperatingSystem information." }
 $biosInfo = Get-CimInstance -ClassName Win32_BIOS -ErrorAction SilentlyContinue
-if (-not $biosInfo) { $global:ErrorLog += "Failed to retrieve Win32_BIOS information." }
 $cpuInfo  = Get-CimInstance -ClassName Win32_Processor -ErrorAction SilentlyContinue
-if (-not $cpuInfo) { $global:ErrorLog += "Failed to retrieve Win32_Processor information." }
 
-$totalMemGB = [math]::Round($operSys.TotalVisibleMemorySize / 1MB, 2)
-$freeMemGB  = [math]::Round($operSys.FreePhysicalMemory / 1MB, 2)
-$uptime     = (Get-Date) - ([Management.ManagementDateTimeConverter]::ToDateTime($operSys.LastBootUpTime))
-$uptimeFormatted = "{0} days, {1} hours, {2} minutes, {3} seconds" -f $uptime.Days, $uptime.Hours, $uptime.Minutes, $uptime.Seconds
+$uptime = if ($operSys) { $now - ([Management.ManagementDateTimeConverter]::ToDateTime($operSys.LastBootUpTime)) } else { $null }
+$uptimeFormatted = if ($uptime) { "{0} days, {1} hours, {2} minutes, {3} seconds" -f $uptime.Days, $uptime.Hours, $uptime.Minutes, $uptime.Seconds } else { "N/A" }
 
-$systemInfo = [PSCustomObject]@{
-    ComputerName          = $compSys.Name
-    Manufacturer          = $compSys.Manufacturer
-    Model                 = $compSys.Model
-    SerialNumber          = $biosInfo.SerialNumber
-    BIOS_Version          = $biosInfo.SMBIOSBIOSVersion
-    BIOS_ReleaseDate      = ([Management.ManagementDateTimeConverter]::ToDateTime($biosInfo.ReleaseDate))
-    OSName                = $operSys.Caption
-    OSVersion             = $operSys.Version
-    SystemType            = $compSys.SystemType
-    CPU_Name              = $cpuInfo.Name
-    CPU_Cores             = $cpuInfo.NumberOfCores
-    CPU_LogicalProcessors = $cpuInfo.NumberOfLogicalProcessors
-    CPU_MaxClockSpeedMHz  = $cpuInfo.MaxClockSpeed
-    TotalMemoryGB         = $totalMemGB
-    FreeMemoryGB          = $freeMemGB
-    SystemUptime          = $uptimeFormatted
+# Ensure all collected data is utilized
+$systemInfo = if ($compSys -and $operSys -and $biosInfo -and $cpuInfo) {
+    [PSCustomObject]@{
+        ComputerName          = $compSys.Name
+        Manufacturer          = $compSys.Manufacturer
+        Model                 = $compSys.Model
+        SerialNumber          = $biosInfo.SerialNumber
+        BIOS_Version          = $biosInfo.SMBIOSBIOSVersion
+        BIOS_ReleaseDate      = ([Management.ManagementDateTimeConverter]::ToDateTime($biosInfo.ReleaseDate))
+        OSName                = $operSys.Caption
+        OSVersion             = $operSys.Version
+        SystemType            = $compSys.SystemType
+        CPU_Name              = $cpuInfo.Name
+        CPU_Cores             = $cpuInfo.NumberOfCores
+        CPU_LogicalProcessors = $cpuInfo.NumberOfLogicalProcessors
+        CPU_MaxClockSpeedMHz  = $cpuInfo.MaxClockSpeed
+        TotalMemoryGB         = [math]::Round($operSys.TotalVisibleMemorySize / 1MB, 2)
+        FreeMemoryGB          = [math]::Round($operSys.FreePhysicalMemory / 1MB, 2)
+        SystemUptime          = $uptimeFormatted
+    }
+} else {
+    $global:ErrorLog += "Failed to collect complete system information."
+    $null
 }
 
-$systemInfoHtmlFragment = $systemInfo | ConvertTo-Html -Fragment -As Table
-$systemInfoHtml = @"
-<div class='section' id='systemInfoSection'>
-  <h2 onclick="toggleSection('systemInfoContent')">System Information <span class='toggle'>[Toggle]</span></h2>
-  <div id='systemInfoContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $systemInfoHtmlFragment
-  </div>
-</div>
-"@
+# Use parallel processing where possible (e.g., for collecting data from multiple sources)
+$tasks = @{
+    "BaseBoard" = {
+        Get-CimInstance -ClassName Win32_BaseBoard -ErrorAction SilentlyContinue |
+        Select-Object Manufacturer, Product, Version, SerialNumber
+    }
+    "GPUInfo" = {
+        Get-CimInstance -ClassName Win32_VideoController -ErrorAction SilentlyContinue |
+        Select-Object Name, DriverVersion, VideoModeDescription
+    }
+    "MemoryModules" = {
+        Get-CimInstance -ClassName Win32_PhysicalMemory -ErrorAction SilentlyContinue |
+        Select-Object Manufacturer, @{Name="Capacity(GB)"; Expression={[math]::Round($_.Capacity/1GB,2)}}, Speed, PartNumber
+    }
+}
 
-# ======================================================
-# 2. MOTHERBOARD INFORMATION
-# ======================================================
-Write-Host "Collecting motherboard information..."
-$baseBoard = Get-CimInstance -ClassName Win32_BaseBoard -ErrorAction SilentlyContinue
-if (-not $baseBoard) { $global:ErrorLog += "Failed to retrieve Win32_BaseBoard information." }
-$baseBoardHtmlFragment = $baseBoard | Select-Object Manufacturer, Product, Version, SerialNumber | ConvertTo-Html -Fragment -As Table
-$baseBoardHtml = @"
-<div class='section' id='baseBoardSection'>
-  <h2 onclick="toggleSection('baseBoardContent')">Motherboard Information <span class='toggle'>[Toggle]</span></h2>
-  <div id='baseBoardContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $baseBoardHtmlFragment
-  </div>
-</div>
-"@
+# Collect data in parallel
+$results = $tasks.GetEnumerator() | ForEach-Object -Parallel {
+    $name = $_.Key
+    $scriptBlock = $_.Value
+    try {
+        [PSCustomObject]@{
+            Name = $name
+            Data = & $scriptBlock
+        }
+    } catch {
+        [PSCustomObject]@{
+            Name = $name
+            Data = $null
+            Error = $_.Exception.Message
+        }
+    }
+}
 
-# ======================================================
-# 3. GPU (GRAPHICS ADAPTER) INFORMATION
-# ======================================================
-Write-Host "Collecting GPU information..."
-$gpuInfo = Get-CimInstance -ClassName Win32_VideoController -ErrorAction SilentlyContinue
-if (-not $gpuInfo) { $global:ErrorLog += "Failed to retrieve Win32_VideoController information." }
-$gpuInfoHtmlFragment = $gpuInfo | Select-Object Name, DriverVersion, VideoModeDescription | ConvertTo-Html -Fragment -As Table
-$gpuInfoHtml = @"
-<div class='section' id='gpuInfoSection'>
-  <h2 onclick="toggleSection('gpuInfoContent')">Graphics Adapter Details <span class='toggle'>[Toggle]</span></h2>
-  <div id='gpuInfoContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $gpuInfoHtmlFragment
-  </div>
-</div>
-"@
+# Process results
+$htmlSections = @{}
 
-# ======================================================
-# 4. PHYSICAL MEMORY MODULES
-# ======================================================
-Write-Host "Collecting physical memory module details..."
-$memoryModules = Get-CimInstance -ClassName Win32_PhysicalMemory -ErrorAction SilentlyContinue
-if (-not $memoryModules) { $global:ErrorLog += "Failed to retrieve Win32_PhysicalMemory information." }
-$memoryModules = $memoryModules | Select-Object Manufacturer, @{Name="Capacity(GB)"; Expression={[math]::Round($_.Capacity/1GB,2)}}, Speed, PartNumber
-$memoryModulesHtmlFragment = $memoryModules | ConvertTo-Html -Fragment -As Table
-$memoryModulesHtml = @"
-<div class='section' id='memoryModulesSection'>
-  <h2 onclick="toggleSection('memoryModulesContent')">Physical Memory Modules <span class='toggle'>[Toggle]</span></h2>
-  <div id='memoryModulesContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $memoryModulesHtmlFragment
-  </div>
-</div>
-"@
+# Generate HTML for system information
+if ($systemInfo) {
+    $systemInfoHtmlFragment = $systemInfo | ConvertTo-Html -Fragment -As Table
+    $htmlSections["SystemInfo"] = $systemInfoHtmlFragment
+}
+
+foreach ($result in $results) {
+    if ($result.Error) {
+        $global:ErrorLog += "Error collecting $($result.Name): $($result.Error)"
+    }
+    # Generate HTML fragments for each section
+    if ($result.Data) {
+        $htmlFragment = $result.Data | ConvertTo-Html -Fragment -As Table
+        $htmlSections[$result.Name] = $htmlFragment
+    }
+}
 
 # ======================================================
 # 5. INSTALLED SOFTWARE (FROM REGISTRY)
@@ -165,15 +154,7 @@ foreach ($path in $uninstallPaths) {
 }
 $softwareList = $softwareList | Select-Object DisplayName, DisplayVersion, Publisher, InstallDate
 $installedSoftwareHtmlFragment = $softwareList | ConvertTo-Html -Fragment -As Table
-$installedSoftwareHtml = @"
-<div class='section' id='installedSoftwareSection'>
-  <h2 onclick="toggleSection('installedSoftwareContent')">Installed Software <span class='toggle'>[Toggle]</span></h2>
-  <div id='installedSoftwareContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $installedSoftwareHtmlFragment
-  </div>
-</div>
-"@
+$htmlSections["InstalledSoftware"] = $installedSoftwareHtmlFragment
 
 # ======================================================
 # 6. HOTFIXES / UPDATES
@@ -186,15 +167,7 @@ try {
     $hotfixes = @()
 }
 $hotfixesHtmlFragment = $hotfixes | ConvertTo-Html -Fragment -As Table
-$hotfixesHtml = @"
-<div class='section' id='hotfixesSection'>
-  <h2 onclick="toggleSection('hotfixesContent')">Installed Hotfixes / Updates <span class='toggle'>[Toggle]</span></h2>
-  <div id='hotfixesContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $hotfixesHtmlFragment
-  </div>
-</div>
-"@
+$htmlSections["Hotfixes"] = $hotfixesHtmlFragment
 
 # ======================================================
 # 7. SECURITY POLICIES (GPRESULT)
@@ -214,24 +187,8 @@ try {
 }
 $machinePolicyHtmlFragment = $machinePolicy -replace "`n", "<br>"
 $userPolicyHtmlFragment    = $userPolicy -replace "`n", "<br>"
-$machinePolicyHtml = @"
-<div class='section' id='machinePolicySection'>
-  <h2 onclick="toggleSection('machinePolicyContent')">Machine Policies (gpresult) <span class='toggle'>[Toggle]</span></h2>
-  <div id='machinePolicyContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $machinePolicyHtmlFragment
-  </div>
-</div>
-"@
-$userPolicyHtml = @"
-<div class='section' id='userPolicySection'>
-  <h2 onclick="toggleSection('userPolicyContent')">User Policies (gpresult) <span class='toggle'>[Toggle]</span></h2>
-  <div id='userPolicyContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $userPolicyHtmlFragment
-  </div>
-</div>
-"@
+$htmlSections["MachinePolicy"] = $machinePolicyHtmlFragment
+$htmlSections["UserPolicy"] = $userPolicyHtmlFragment
 
 # ======================================================
 # 8. DISK USAGE
@@ -244,15 +201,7 @@ $diskUsage = Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" -ErrorActio
                   @{Name='Used(GB)'; Expression={[math]::Round(($_.Size - $_.FreeSpace)/1GB,2)}},
                   @{Name='PercentFree'; Expression={ if ($_.Size -eq 0) { 0 } else { [math]::Round(($_.FreeSpace / $_.Size) * 100,2) } } }
 $diskUsageHtmlFragment = $diskUsage | ConvertTo-Html -Fragment -As Table
-$diskUsageHtml = @"
-<div class='section' id='diskUsageSection'>
-  <h2 onclick="toggleSection('diskUsageContent')">Disk Usage <span class='toggle'>[Toggle]</span></h2>
-  <div id='diskUsageContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $diskUsageHtmlFragment
-  </div>
-</div>
-"@
+$htmlSections["DiskUsage"] = $diskUsageHtmlFragment
 
 # ======================================================
 # 9. SMART DISK HEALTH
@@ -266,46 +215,21 @@ try {
     $smartData = @()
 }
 $smartDataHtmlFragment = $smartData | ConvertTo-Html -Fragment -As Table
-$smartDataHtml = @"
-<div class='section' id='smartDiskSection'>
-  <h2 onclick="toggleSection('smartDiskContent')">SMART Disk Health <span class='toggle'>[Toggle]</span></h2>
-  <div id='smartDiskContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $smartDataHtmlFragment
-  </div>
-</div>
-"@
+$htmlSections["SmartDiskHealth"] = $smartDataHtmlFragment
 
 # ======================================================
 # 10. NETWORK INFORMATION (EXTENDED)
 # ======================================================
 Write-Host "Collecting network configuration details..."
-# Active network adapters
 $currentAdapters = Get-NetAdapter -Physical -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq 'Up' } | Select-Object Name, InterfaceDescription, MacAddress, LinkSpeed, Status
-$currentAdaptersHtmlFragment = $currentAdapters | ConvertTo-Html -Fragment -As Table -PreContent "<h3>Active Network Adapters</h3>"
-
-# IP addresses
 $ipConfigs = Get-NetIPAddress -ErrorAction SilentlyContinue | Select-Object InterfaceAlias, IPAddress, AddressFamily, PrefixLength, Type
-$ipConfigsHtmlFragment = $ipConfigs | ConvertTo-Html -Fragment -As Table -PreContent "<h3>IP Addresses</h3>"
-
-# Network Profiles
 $networkProfiles = Get-NetConnectionProfile -ErrorAction SilentlyContinue | Select-Object Name, NetworkCategory, IPv4Connectivity, IPv6Connectivity
-$networkProfilesHtmlFragment = $networkProfiles | ConvertTo-Html -Fragment -As Table -PreContent "<h3>Network Profiles</h3>"
-
-# DNS Settings
 $dnsSettings = Get-DnsClientServerAddress -ErrorAction SilentlyContinue | Select-Object InterfaceAlias, ServerAddresses
-$dnsSettingsHtmlFragment = $dnsSettings | ConvertTo-Html -Fragment -As Table -PreContent "<h3>DNS Settings</h3>"
-
-$networkContent = $currentAdaptersHtmlFragment + $ipConfigsHtmlFragment + $networkProfilesHtmlFragment + $dnsSettingsHtmlFragment
-$networkHtml = @"
-<div class='section' id='networkSection'>
-  <h2 onclick="toggleSection('networkContent')">Network Configuration <span class='toggle'>[Toggle]</span></h2>
-  <div id='networkContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $networkContent
-  </div>
-</div>
-"@
+$networkContent = $currentAdapters | ConvertTo-Html -Fragment -As Table -PreContent "<h3>Active Network Adapters</h3>" +
+                  $ipConfigs | ConvertTo-Html -Fragment -As Table -PreContent "<h3>IP Addresses</h3>" +
+                  $networkProfiles | ConvertTo-Html -Fragment -As Table -PreContent "<h3>Network Profiles</h3>" +
+                  $dnsSettings | ConvertTo-Html -Fragment -As Table -PreContent "<h3>DNS Settings</h3>"
+$htmlSections["Network"] = $networkContent
 
 # ======================================================
 # 11. ALL SERVICES
@@ -313,15 +237,7 @@ $networkHtml = @"
 Write-Host "Collecting services information..."
 $allServices = Get-Service -ErrorAction SilentlyContinue | Select-Object Name, DisplayName, Status, StartType
 $allServicesHtmlFragment = $allServices | ConvertTo-Html -Fragment -As Table
-$allServicesHtml = @"
-<div class='section' id='servicesSection'>
-  <h2 onclick="toggleSection('servicesContent')">All Services <span class='toggle'>[Toggle]</span></h2>
-  <div id='servicesContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $allServicesHtmlFragment
-  </div>
-</div>
-"@
+$htmlSections["Services"] = $allServicesHtmlFragment
 
 # ======================================================
 # 12. SCHEDULED TASKS
@@ -334,15 +250,7 @@ try {
     $scheduledTasks = @()
 }
 $scheduledTasksHtmlFragment = $scheduledTasks | ConvertTo-Html -Fragment -As Table
-$scheduledTasksHtml = @"
-<div class='section' id='scheduledTasksSection'>
-  <h2 onclick="toggleSection('scheduledTasksContent')">Scheduled Tasks <span class='toggle'>[Toggle]</span></h2>
-  <div id='scheduledTasksContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $scheduledTasksHtmlFragment
-  </div>
-</div>
-"@
+$htmlSections["ScheduledTasks"] = $scheduledTasksHtmlFragment
 
 # ======================================================
 # 13. LOCAL USERS
@@ -355,15 +263,7 @@ try {
     $localUsers = @()
 }
 $localUsersHtmlFragment = $localUsers | ConvertTo-Html -Fragment -As Table
-$localUsersHtml = @"
-<div class='section' id='localUsersSection'>
-  <h2 onclick="toggleSection('localUsersContent')">Local Users <span class='toggle'>[Toggle]</span></h2>
-  <div id='localUsersContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $localUsersHtmlFragment
-  </div>
-</div>
-"@
+$htmlSections["LocalUsers"] = $localUsersHtmlFragment
 
 # ======================================================
 # 14. LOCAL GROUPS
@@ -375,16 +275,8 @@ try {
     $global:ErrorLog += "Error retrieving local groups: " + $_.Exception.Message
     $localGroups = @()
 }
-$localGroupsHtmlFragment = $localGroups | ConvertTo-Html -Fragment -As Table -PreContent "<h3>Local Groups</h3>"
-$localGroupsHtml = @"
-<div class='section' id='localGroupsSection'>
-  <h2 onclick="toggleSection('localGroupsContent')">Local Groups <span class='toggle'>[Toggle]</span></h2>
-  <div id='localGroupsContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $localGroupsHtmlFragment
-  </div>
-</div>
-"@
+$localGroupsHtmlFragment = $localGroups | ConvertTo-Html -Fragment -As Table
+$htmlSections["LocalGroups"] = $localGroupsHtmlFragment
 
 # ======================================================
 # 15. ENVIRONMENT VARIABLES
@@ -392,15 +284,7 @@ $localGroupsHtml = @"
 Write-Host "Collecting environment variables..."
 $envVars = Get-ChildItem env: | Select-Object Name, Value
 $envVarsHtmlFragment = $envVars | ConvertTo-Html -Fragment -As Table
-$envVarsHtml = @"
-<div class='section' id='envVarsSection'>
-  <h2 onclick="toggleSection('envVarsContent')">Environment Variables <span class='toggle'>[Toggle]</span></h2>
-  <div id='envVarsContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $envVarsHtmlFragment
-  </div>
-</div>
-"@
+$htmlSections["EnvironmentVariables"] = $envVarsHtmlFragment
 
 # ======================================================
 # 16. RECENT SYSTEM ERRORS
@@ -414,15 +298,7 @@ try {
     $eventErrors = @()
 }
 $eventErrorsHtmlFragment = $eventErrors | ConvertTo-Html -Fragment -As Table
-$eventErrorsHtml = @"
-<div class='section' id='eventErrorsSection'>
-  <h2 onclick="toggleSection('eventErrorsContent')">Recent System Errors (Event Log) <span class='toggle'>[Toggle]</span></h2>
-  <div id='eventErrorsContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $eventErrorsHtmlFragment
-  </div>
-</div>
-"@
+$htmlSections["SystemErrors"] = $eventErrorsHtmlFragment
 
 # ======================================================
 # 17. STARTUP APPLICATIONS
@@ -435,15 +311,7 @@ try {
     $startupApps = @()
 }
 $startupAppsHtmlFragment = $startupApps | ConvertTo-Html -Fragment -As Table
-$startupAppsHtml = @"
-<div class='section' id='startupAppsSection'>
-  <h2 onclick="toggleSection('startupAppsContent')">Startup Applications <span class='toggle'>[Toggle]</span></h2>
-  <div id='startupAppsContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $startupAppsHtmlFragment
-  </div>
-</div>
-"@
+$htmlSections["StartupApplications"] = $startupAppsHtmlFragment
 
 # ======================================================
 # 18. TOP PROCESSES BY CPU AND MEMORY
@@ -458,25 +326,9 @@ try {
     $topMemProcesses = @()
 }
 $topCPUHtmlFragment = $topCPUProcesses | ConvertTo-Html -Fragment -As Table
-$topCPUHtml = @"
-<div class='section' id='topCPUSection'>
-  <h2 onclick="toggleSection('topCPUContent')">Top 10 Processes by CPU Usage <span class='toggle'>[Toggle]</span></h2>
-  <div id='topCPUContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $topCPUHtmlFragment
-  </div>
-</div>
-"@
 $topMemHtmlFragment = $topMemProcesses | ConvertTo-Html -Fragment -As Table
-$topMemHtml = @"
-<div class='section' id='topMemSection'>
-  <h2 onclick="toggleSection('topMemContent')">Top 10 Processes by Memory Usage <span class='toggle'>[Toggle]</span></h2>
-  <div id='topMemContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $topMemHtmlFragment
-  </div>
-</div>
-"@
+$htmlSections["TopCPUProcesses"] = $topCPUHtmlFragment
+$htmlSections["TopMemoryProcesses"] = $topMemHtmlFragment
 
 # ======================================================
 # 19. WINDOWS DEFENDER / ANTIVIRUS STATUS
@@ -486,18 +338,10 @@ try {
     $defenderStatus = Get-MpComputerStatus -ErrorAction Stop | Select-Object AMServiceEnabled, AntispywareEnabled, AntivirusEnabled, RealTimeProtectionEnabled
 } catch {
     $global:ErrorLog += "Error retrieving Windows Defender status: " + $_.Exception.Message
-    $defenderStatus = @{}
+    $defenderStatus = @{ "Status" = "Not Available" }
 }
 $defenderStatusHtmlFragment = $defenderStatus | ConvertTo-Html -Fragment -As Table
-$defenderStatusHtml = @"
-<div class='section' id='defenderSection'>
-  <h2 onclick="toggleSection('defenderContent')">Windows Defender/Antivirus Status <span class='toggle'>[Toggle]</span></h2>
-  <div id='defenderContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $defenderStatusHtmlFragment
-  </div>
-</div>
-"@
+$htmlSections["DefenderStatus"] = $defenderStatusHtmlFragment
 
 # ======================================================
 # 20. PERFORMANCE METRICS
@@ -534,15 +378,7 @@ $perfMetrics = [PSCustomObject]@{
     "Disk Writes/sec"        = $diskWrites
 }
 $perfMetricsHtmlFragment = $perfMetrics | ConvertTo-Html -Fragment -As Table
-$perfMetricsHtml = @"
-<div class='section' id='perfMetricsSection'>
-  <h2 onclick="toggleSection('perfMetricsContent')">Performance Metrics <span class='toggle'>[Toggle]</span></h2>
-  <div id='perfMetricsContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $perfMetricsHtmlFragment
-  </div>
-</div>
-"@
+$htmlSections["PerformanceMetrics"] = $perfMetricsHtmlFragment
 
 # ======================================================
 # 21. ERROR LOG (IF ANY)
@@ -550,56 +386,11 @@ $perfMetricsHtml = @"
 $errorLogHtml = ""
 if ($global:ErrorLog.Count -gt 0) {
     $errorLogHtmlFragment = $global:ErrorLog | ConvertTo-Html -Fragment -As List
-    $errorLogHtml = @"
-<div class='section' id='errorLogSection'>
-  <h2 onclick="toggleSection('errorLogContent')">Error Log <span class='toggle'>[Toggle]</span></h2>
-  <div id='errorLogContent'>
-    <a href='#toc' class='button'>Table of Contents</a>
-    $errorLogHtmlFragment
-  </div>
-</div>
-"@
+    $htmlSections["ErrorLog"] = $errorLogHtmlFragment
 }
 
-# ======================================================
-# TABLE OF CONTENTS
-# ======================================================
-$tableOfContents = @"
-<div id='toc'>
-  <h2>Summary / Table of Contents</h2>
-  <div>
-    <a href='#systemInfoSection' class='button'>System Info</a>
-    <a href='#baseBoardSection' class='button'>Motherboard</a>
-    <a href='#gpuInfoSection' class='button'>GPU</a>
-    <a href='#memoryModulesSection' class='button'>Memory Modules</a>
-    <a href='#installedSoftwareSection' class='button'>Installed Software</a>
-    <a href='#hotfixesSection' class='button'>Hotfixes/Updates</a>
-    <a href='#machinePolicySection' class='button'>Machine Policies</a>
-    <a href='#userPolicySection' class='button'>User Policies</a>
-    <a href='#diskUsageSection' class='button'>Disk Usage</a>
-    <a href='#smartDiskSection' class='button'>SMART Health</a>
-    <a href='#networkSection' class='button'>Network</a>
-    <a href='#servicesSection' class='button'>Services</a>
-    <a href='#scheduledTasksSection' class='button'>Scheduled Tasks</a>
-    <a href='#localUsersSection' class='button'>Local Users</a>
-    <a href='#localGroupsSection' class='button'>Local Groups</a>
-    <a href='#envVarsSection' class='button'>Env Variables</a>
-    <a href='#eventErrorsSection' class='button'>System Errors</a>
-    <a href='#startupAppsSection' class='button'>Startup Apps</a>
-    <a href='#topCPUSection' class='button'>Top CPU</a>
-    <a href='#topMemSection' class='button'>Top Memory</a>
-    <a href='#defenderSection' class='button'>Defender Status</a>
-    <a href='#perfMetricsSection' class='button'>Performance Metrics</a>
-    <a href='#errorLogSection' class='button'>Error Log</a>
-  </div>
-</div>
-"@
-
-# ======================================================
-# BUILDING THE FINAL HTML REPORT
-# ======================================================
-$reportDate = Get-Date
-$reportHtml = @"
+# Combine all HTML sections into the final report
+$htmlHeader = @"
 <html>
   <head>
     <meta charset='utf-8' />
@@ -630,39 +421,51 @@ $reportHtml = @"
   </head>
   <body>
     <h1>Comprehensive Diagnostic Report for $($env:COMPUTERNAME)</h1>
-    <p><strong>Report Generated on:</strong> $reportDate</p>
-    $tableOfContents
-    $systemInfoHtml
-    $baseBoardHtml
-    $gpuInfoHtml
-    $memoryModulesHtml
-    $installedSoftwareHtml
-    $hotfixesHtml
-    $machinePolicyHtml
-    $userPolicyHtml
-    $diskUsageHtml
-    $smartDataHtml
-    $networkHtml
-    $allServicesHtml
-    $scheduledTasksHtml
-    $localUsersHtml
-    $localGroupsHtml
-    $envVarsHtml
-    $eventErrorsHtml
-    $startupAppsHtml
-    $topCPUHtml
-    $topMemHtml
-    $defenderStatusHtml
-    $perfMetricsHtml
-    $errorLogHtml
+    <p><strong>Report Generated on:</strong> $(Get-Date)</p>
+    <div id='toc'>
+      <h2>Summary / Table of Contents</h2>
+      <div>
+        <a href='#SystemInfo' class='button'>System Info</a>
+        <a href='#BaseBoard' class='button'>Motherboard</a>
+        <a href='#GPUInfo' class='button'>GPU</a>
+        <a href='#MemoryModules' class='button'>Memory Modules</a>
+        <a href='#InstalledSoftware' class='button'>Installed Software</a>
+        <a href='#Hotfixes' class='button'>Hotfixes</a>
+        <a href='#MachinePolicy' class='button'>Machine Policy</a>
+        <a href='#UserPolicy' class='button'>User Policy</a>
+        <a href='#DiskUsage' class='button'>Disk Usage</a>
+        <a href='#SmartDiskHealth' class='button'>SMART Disk Health</a>
+        <a href='#Network' class='button'>Network</a>
+        <a href='#Services' class='button'>Services</a>
+        <a href='#ScheduledTasks' class='button'>Scheduled Tasks</a>
+        <a href='#LocalUsers' class='button'>Local Users</a>
+        <a href='#LocalGroups' class='button'>Local Groups</a>
+        <a href='#EnvironmentVariables' class='button'>Environment Variables</a>
+        <a href='#SystemErrors' class='button'>System Errors</a>
+        <a href='#StartupApplications' class='button'>Startup Applications</a>
+        <a href='#TopCPUProcesses' class='button'>Top CPU Processes</a>
+        <a href='#TopMemoryProcesses' class='button'>Top Memory Processes</a>
+        <a href='#DefenderStatus' class='button'>Defender Status</a>
+        <a href='#PerformanceMetrics' class='button'>Performance Metrics</a>
+        <a href='#ErrorLog' class='button'>Error Log</a>
+      </div>
+    </div>
+"@
+
+$htmlFooter = @"
   </body>
 </html>
 "@
 
-Write-Host "`nSaving report to $OutputPath"
-$reportHtml | Out-File -FilePath $OutputPath -Encoding UTF8
+$htmlContent = $htmlHeader + ($htmlSections.Values -join "") + $htmlFooter
 
-Write-Host "`nExtended diagnostic report created successfully!"
-Write-Host "Location: $OutputPath"
-Write-Host "Opening the report..."
-Start-Process $OutputPath
+# Write the report to the output path
+try {
+    $htmlContent | Out-File -FilePath $OutputPath -Encoding UTF8
+    Write-Host "Report generated at: $OutputPath" -ForegroundColor Green
+    Start-Process $OutputPath
+} catch {
+    Write-Error "Failed to write report to $OutputPath. Error: $_"
+}
+
+Write-Host "`nProcessing completed." -ForegroundColor Cyan
