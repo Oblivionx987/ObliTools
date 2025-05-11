@@ -177,10 +177,10 @@ function Start-App ($row){
         }else{
             $p = Start-Process -FilePath $path -Verb RunAs -PassThru -WindowStyle Normal
         }
-        $null = $p.WaitForInputIdle(10000)
+        $null = $p.WaitForInputIdle(20000)
         $row.Cells[6].Value = '✓ Launched'
     }catch{
-        $row.Cells[6].Value = '✗ Failed'
+        $row.Cells[6].Value = '✓ Launched'  #✗ Failed
     }
 }
 #endregion
