@@ -1,0 +1,4 @@
+TOKEN = os.getenv('DISCORD_TOKEN')
+GUILD = os.getenv('DISCORD_GUILD')
+print(TOKEN)  # Check what token is being loaded
+print(GUILD)  # Check what guild is being loaded

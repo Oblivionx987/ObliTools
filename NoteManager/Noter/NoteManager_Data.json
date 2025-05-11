@@ -1,0 +1,29 @@
+{
+  "Notes": [
+    [],
+    {
+      "Timestamp": "2025-05-10 21:33:52",
+      "Content": "test",
+      "Category": "",
+      "Reminder": "",
+      "Alerted": false
+    },
+    {
+      "Timestamp": "2025-05-10 21:33:57",
+      "Content": "test",
+      "Category": "1",
+      "Reminder": "2",
+      "Alerted": false
+    },
+    {
+      "Timestamp": "2025-05-10 21:34:09",
+      "Content": "test14323423",
+      "Category": "1",
+      "Reminder": "2",
+      "Alerted": false
+    }
+  ],
+  "Config": {
+    "DarkMode": false
+  }
+}

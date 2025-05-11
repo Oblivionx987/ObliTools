@@ -1,0 +1,2 @@
+Add a list in tkinter that displays current afk users.
+Add a button in the tkinter window that can set the bot to maintenance mode. Make the button gray when not active, and red when active.

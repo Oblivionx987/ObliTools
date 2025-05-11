@@ -1,0 +1,21 @@
+add commands to the bot
+
+async def bot_help(ctx):
+    help_text = "**Available Commands:**\n" \
+                "!bothelp - Displays this help message\n" \
+                "!ping - Checks if the bot is online\n" \
+                "!server - Provides server information\n" \
+                "!user - Displays user information\n" \
+                "!roll [number] - Rolls a random number\n" \
+                "!remind [time] [message] - Sets a reminder\n" \
+                "!joke - Tells a random joke\n" \
+                "!wiki [search term] - Searches Wikipedia\n" \
+                "!weather [location] - Fetches weather information\n" \
+                "!urban [term] - Looks up Urban Dictionary definition\n" \
+                "!roleinfo [role] - Displays role information"
+
+
+
+add a run time clock to the tkinter window
+add a run timer to the tkinter window
+make the tkinter window resize
