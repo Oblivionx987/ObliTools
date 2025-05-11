@@ -1,0 +1,1 @@
+C:\temp\SetupDiag\SetupDiag.exe /Output:C:\temp\SetupDiag\Logs /LogsPath:C:\$WINDOWS.~BT

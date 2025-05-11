@@ -1,0 +1,1 @@
+Add-AppxPackage -Path C:\temp\Microsoft.WindowsCalculator_2021.2307.4.0_neutral_~_8wekyb3d8bbwe.Msixbundle

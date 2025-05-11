@@ -1,0 +1,56 @@
+C:\temp\SetupDiag.exe /Output:c:\temp\ /LogsPath:C:\$WINDOWS.~BT
+
+
+C:\temp\SetupDiag\SetupDiag.exe /Output:c:\temp\ /LogsPath:C:\Users\114825\Desktop\snc59133
+C:\temp\SetupDiag\SetupDiag.exe /Output:c:\temp\ /LogsPath:C:\Users\114825\Desktop\snc54331\$WINDOWS.~BT
+C:\Users\114825\Desktop\snc59133
+
+$SourceFile
+
+
+cd c:\temp
+SetupDiag.exe /verbose /LogsPath:C:\$WINDOWS.~BT
+
+
+
+
+C:\temp\SetupDiag\SetupDiag.exe /Output:c:\temp\ /LogsPath:D:\Logging\Windows11\SNC54331\$WINDOWS.~BT
+C:\temp\SetupDiag\SetupDiag.exe /Verbose:c:\temp\ /LogsPath:"D:\Logging\Windows11\SNC54331-Jason_Welle\$WINDOWS.~BT"
+
+
+
+C:\temp\SetupDiag\SetupDiag.exe /Output:c:\temp\ /LogsPath:C:\Users\114825\Desktop\SNC59222\$WINDOWS.~BT
+C:\temp\SetupDiag\SetupDiag.exe /Output:c:\temp\ /LogsPath:C:\$WINDOWS.~BT
+C:\temp\SetupDiag\SetupDiag.exe /Verbose: /LogsPath:C:\$WINDOWS.~BT
+
+
+
+C:\temp\SetupDiag\SetupDiag.exe /Output:c:\temp\ /LogsPath:C:\Users\114825\Desktop\SNC59133\$WINDOWS.~BT
+C:\temp\SetupDiag.exe /Output:c:\temp\ /LogsPath:C:\$WINDOWS.~BT
+
+
+
+
+C:\temp\tss\TSS.ps1 -CollectLog DND_SetupReport
+
+
+
+
+
+
+
+
+
+
+
+C:\temp\SetupDiag\SetupDiag.exe /Output:c:\Temp\ /LogsPath:C:\Users\114825\Desktop\snc54331\$WINDOWS.~BT
+
+
+
+
+Err_6.4.5.exe 0x40017
+0xC1900101-0x40017
+
+
+
+

@@ -1,0 +1,1 @@
+Search-ADAccount -AccountExpired -UsersOnly | Select-Object Name, SamAccountName, DistinguishedName, AccountExpirationDate | export-csv -path c:\temp\passwordexpiration.csv

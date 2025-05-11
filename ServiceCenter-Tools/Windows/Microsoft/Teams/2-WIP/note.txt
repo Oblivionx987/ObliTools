@@ -1,0 +1,51 @@
+Get-WmiObject -Class Win64_Product | Select-Object -Property Name
+
+
+
+## this found the teams addin installer
+Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*  | Select-Object DisplayName,Publisher,Version,InstallDate | Sort-Object -Property InstallDate -Descending | Out-String
+
+Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*  | Where-Object {$_.Name "*Teams*"}
+
+
+## Magic - found everything
+Get-WMIObject Win32_InstalledWin32Program | select Name, Version, ProgramId 
+
+
+
+
+Get-WmiObject -Class Win32_InstalledWin32Program | Where-Object{$_.Name -eq "microsoft teams"}
+
+-and $_.Version -eq "1.6.00.18681}
+
+$Test = Get-WmiObject -Class Win32_InstalledWin32Program | Where-Object{$_.Name -eq "microsoft teams"}{$_.Version -eq "1.6.00.18681}
+
+
+
+
+24091.214.2846.1452
+
+## This will find all results for teams in win 32 installed programs
+Get-CimInstance -ClassName Win32_InstalledWin32Program | Where-Object { $_.Name -like "*teams"}
+
+
+## Hidden location containing new teams installation
+C:\Program Files\WindowsApps\MSTeams_24091.214.2846.1452_x64__8wekyb3d8bbwe\
+
+MsiExec.exe /I{A7AB73A3-CB10-4AA5-9D38-6AEFFBDE4C91}
+
+
+
+Start-Process MsiExec.exe -Args "/x {A7AB73A3-CB10-4AA5-9D38-6AEFFBDE4C91}"
+
+
+
+
+$program = Get-ChildItem -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Get-ItemProperty | Where-Object {$_.DisplayName -like "*Microsoft Teams Meeting*" } | Select-Object -First 1 DisplayName, UninstallString
+MsiExec.exe /uninstall "$($program.UninstallString)"
+
+
+
+C:\Program Files\WindowsApps\MSTeams_24091.214.2846.1452_x64__8wekyb3d8bbwe\MicrosoftTeamsMeetingAddinInstaller.msi
+
+
