@@ -1,0 +1,1 @@
+pwsh.exe -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -File "C:\AdminAppLauncher\AdminAppLauncher.ps1"

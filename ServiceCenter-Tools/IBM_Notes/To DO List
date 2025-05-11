@@ -1,0 +1,22 @@
+\\ Force Close IBM Notes
+\\Browse to C:\Program Files (x86)\IBM\Notes\Data and delete the following file/folder
+    ~notes.lck
+    Cache.NDK
+    Desktop8.ndk
+    Workspace (folder)
+
+\\Browse to C:\Program Files (x86)\IBM\Notes
+    Delete notes.ini
+    Push good notes.ini file
+
+\\Open Ibm notes and go through configuration
+    - online
+    Your name = First Name space Last Name
+    Domino Server = AppsDom02/SNC/Sncorp
+
+
+If error proceed anyways
+
+Default password is - 1234567890
+
+## Done

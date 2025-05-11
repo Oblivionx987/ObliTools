@@ -1,0 +1,51 @@
+[
+  {
+    "Name": "snc49844",
+    "Address": "snc49844",
+    "Group": "",
+    "Status": "Online",
+    "ConsecutiveFailures": 0
+  },
+  {
+    "Name": "snc53779",
+    "Address": "snc53779",
+    "Group": "INC0169773",
+    "Status": "Offline",
+    "ConsecutiveFailures": 713
+  },
+  {
+    "Name": "SNC58082",
+    "Address": "SNC58082",
+    "Group": "",
+    "Status": "Offline",
+    "ConsecutiveFailures": 698
+  },
+  {
+    "Name": "SNC67339",
+    "Address": "SNC67339",
+    "Group": "Taylor Goldzwig",
+    "Status": "Offline",
+    "ConsecutiveFailures": 574
+  },
+  {
+    "Name": "SNC69436",
+    "Address": "SNC69436",
+    "Group": "Dawson Spann",
+    "Status": "Offline",
+    "ConsecutiveFailures": 211
+  },
+  {
+    "Name": "SNC70159",
+    "Address": "SNC70159",
+    "Group": "Zach Haberl",
+    "Status": "Offline",
+    "ConsecutiveFailures": 211
+  },
+  {
+    "Name": "SNC58916",
+    "Address": "SNC58916",
+    "Group": "INC0172210",
+    "Status": "Offline",
+    "ConsecutiveFailures": 401
+  }
+]
