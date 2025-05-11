@@ -31,6 +31,7 @@ Param(
     [string]
     $ReportPath = "C:\Temp\SmartCardReport_{0:yyyy-MM-dd_HH-mm-ss}.html" -f (Get-Date),
 
+    [ValidateRange(1, 1000)]
     [int]
     $MaxEvents = 20,
 
@@ -44,8 +45,7 @@ Set-StrictMode -Version Latest
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
     [Security.Principal.WindowsBuiltInRole] "Administrator"))
 {
-    Write-Host "You must run this script as an Administrator!"
-    exit 1
+    Write-Error "You must run this script as an Administrator!" -ErrorAction Stop
 }
 
 # Create directory if it doesn't exist
@@ -53,10 +53,8 @@ $reportDir = Split-Path $ReportPath
 if (-not (Test-Path $reportDir)) {
     try {
         New-Item -ItemType Directory -Path $reportDir -ErrorAction Stop | Out-Null
-    }
-    catch {
-        Write-Error "Failed to create directory $reportDir. Error: $_"
-        exit 1
+    } catch {
+        Write-Error "Failed to create directory $reportDir. Error: $_" -ErrorAction Stop
     }
 }
 
@@ -78,10 +76,9 @@ $serviceReport = foreach ($serviceName in $servicesToCheck) {
         [pscustomobject]@{
             ServiceName = $serviceObj.Name
             Status      = $serviceObj.Status
-            StartType   = (Get-WmiObject Win32_Service -Filter "Name='$serviceName'").StartMode
+            StartType   = (Get-CimInstance Win32_Service -Filter "Name='$serviceName'").StartMode
         }
-    }
-    else {
+    } else {
         [pscustomobject]@{
             ServiceName = $serviceName
             Status      = "Service not found"
@@ -99,7 +96,7 @@ $reportSections.Add(
 # 2. Attempt to list any detected smart card readers (via WMI)
 #------------------------------------------------------------------------------
 try {
-    $readers = Get-WmiObject -Class Win32_SmartCardReader -ErrorAction Stop
+    $readers = Get-CimInstance -ClassName Win32_SmartCardReader -ErrorAction Stop
     if ($readers) {
         $readerReport = foreach ($reader in $readers) {
             [pscustomobject]@{
@@ -108,16 +105,14 @@ try {
                 Status         = "Detected"
             }
         }
-    }
-    else {
+    } else {
         $readerReport = ,([pscustomobject]@{
             ReaderName     = "None"
             DeviceID       = "N/A"
             Status         = "No smart card readers found"
         })
     }
-}
-catch {
+} catch {
     $readerReport = ,([pscustomobject]@{
         ReaderName     = "Error"
         DeviceID       = "N/A"
@@ -152,8 +147,7 @@ foreach ($logName in $LogNames) {
                 Message     = ($evt.Message -replace "`r|`n"," ")
             }
         }
-    }
-    else {
+    } else {
         $logReport += [pscustomobject]@{
             LogName     = $logName
             EventID     = "N/A"
@@ -181,12 +175,10 @@ if ($CheckCertUtil) {
         try {
             $certutilOutput = certutil -scinfo 2>&1
             $reportSections.Add("<h3>4. Certutil -scinfo Output</h3><pre>$certutilOutput</pre>")
-        }
-        catch {
+        } catch {
             $reportSections.Add("<h3>4. Certutil -scinfo Output</h3><p>Error running certutil: $_</p>")
         }
-    }
-    else {
+    } else {
         $reportSections.Add("<h3>4. Certutil -scinfo Output</h3><p>certutil.exe not found on this system.</p>")
     }
 }
@@ -200,6 +192,14 @@ $htmlHeader = @"
 <head>
     <meta charset='UTF-8'>
     <title>Smart Card Troubleshooting Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        h2, h3 { color: #2E86C1; }
+        pre { background-color: #F4F6F7; padding: 10px; border: 1px solid #D5D8DC; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #D5D8DC; padding: 8px; text-align: left; }
+        th { background-color: #2E86C1; color: white; }
+    </style>
 </head>
 <body>
     <h2>Smart Card Troubleshooting Report</h2>
