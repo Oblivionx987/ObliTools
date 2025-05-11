@@ -1,0 +1,1 @@
+Get-Package -Provider Programs -IncludeWindowsInstaller -Name Titus* | Uninstall-Package -AllVersions
