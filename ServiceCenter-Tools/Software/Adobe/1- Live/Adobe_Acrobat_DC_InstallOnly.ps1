@@ -13,7 +13,7 @@ $Author = "Author: Seth Burns - System Administrator II - Service Center"
 ##
 ## VERSION
 $this_version = "Version: 1.0.0"
-$live = "L"
+$live = "Live"
 #endregion
 
 #region Requirements

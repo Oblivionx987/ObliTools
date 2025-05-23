@@ -59,11 +59,11 @@ foreach ($file in $ps1Files) {
 
     # Determine color based on live value
     switch ($live) {
-        "T" { $color = "orange" }
-        "=" { $color = "green" }
-        "w" { $color = "moccasin" }
-        "r" { $color = "red" }
-        "rs" { $color = "darkred" }
+        "Test" { $color = "orange" }
+        "Live" { $color = "green" }
+        "WIP" { $color = "moccasin" }
+        "Retired" { $color = "red" }
+        "Restricted" { $color = "darkred" }
         default { $color = "lightgray" }
     }
 

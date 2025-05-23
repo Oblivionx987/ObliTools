@@ -1,4 +1,4 @@
-## This script will Install Citrix Workspace and Remove Citrix Receiver
+
 
 Powershell
 
@@ -7,6 +7,12 @@ $Destination = "C:\temp"
 $Source = "\\sncorp\internal\Corp_Software\ServiceCenter_SNC_Software\AutoCAD2022_64bit_IAS.zip"
 $vpn_test = Test-NetConnection -ComputerName "sncorp.intranet.com"
 $ping_test = $vpn_test | Select-Object PingSucceeded -Wait
+$description = "This script will Uninstall AutoCad 2022 if it exists then it will Install AutoCad 2022"
+$author = "Author: Seth Burns - System Administrator II - Service Center"
+$live = "Live"
+$Version = "1.0.0"
+
+
 
 ## Functions
 function Red { process { Write-Host $_ -ForegroundColor Red }}
