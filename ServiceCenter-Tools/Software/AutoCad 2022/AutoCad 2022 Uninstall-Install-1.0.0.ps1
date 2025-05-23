@@ -11,6 +11,7 @@ $description = "This script will Uninstall AutoCad 2022 if it exists then it wil
 $author = "Author: Seth Burns - System Administrator II - Service Center"
 $live = "Live"
 $Version = "1.0.0"
+$bmgr = "Live"
 
 
 

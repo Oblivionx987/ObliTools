@@ -1,4 +1,8 @@
-
+$description = "This script will install Logitech Unifying receiver"
+$live = "Live"
+$bmgr = "Live"
+$author = "Seth Burns - System Administarator II - Service Center"
+$version = "1.0.0"
 
 
 
