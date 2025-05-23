@@ -29,7 +29,7 @@ $htmlContent = @()
 # Add HTML header
 $htmlContent += "<html><head><title>PowerShell Script Summary</title></head><body>"
 $htmlContent += "<h1>Summary of .ps1 files in the directory $directory and its subdirectories:</h1>"
-$htmlContent += "<table border='1'><tr><th>Live</th><th>Folder Name</th><th>File Name</th><th>Version</th><th>Author</th><th>Description</th><th>Path</th></tr>"
+$htmlContent += "<table border='1'><tr><th>Live</th><th>BMGR</th><th>Folder Name</th><th>File Name</th><th>Version</th><th>Author</th><th>Description</th><th>Path</th></tr>"
 
 foreach ($file in $ps1Files) {
     # Read the content of the file
@@ -40,6 +40,7 @@ foreach ($file in $ps1Files) {
     $author = "No author found."
     $version = "No version found."
     $live = "No live status found."
+    $bmgr = "No Bomgar status found."
 
     # Check for the variables in the file content
     foreach ($line in $fileContent) {
@@ -55,10 +56,23 @@ foreach ($file in $ps1Files) {
         if ($line -match '^\s*\$live\s*=\s*"(.*)"') {
             $live = $matches[1]
         }
+        if ($line -match '^\s*\$bmgr\s*=\s*"(.*)"') {
+            $bmgr = $matches[1]
+        }
     }
 
     # Determine color based on live value
     switch ($live) {
+        "Test" { $color = "orange" }
+        "Live" { $color = "green" }
+        "WIP" { $color = "moccasin" }
+        "Retired" { $color = "red" }
+        "Restricted" { $color = "darkred" }
+        default { $color = "lightgray" }
+    }
+
+    # Determine color based on bmgr value
+    switch ($bmgr) {
         "Test" { $color = "orange" }
         "Live" { $color = "green" }
         "WIP" { $color = "moccasin" }
@@ -73,6 +87,7 @@ foreach ($file in $ps1Files) {
     # Add file information to HTML content
     $htmlContent += "<tr>"
     $htmlContent += "<td style='background-color:$color;'>$live</td>"
+    $htmlContent += "<td style='background-color:$color;'>$bmgr</td>"
     $htmlContent += "<td>$folderName</td>"
     $htmlContent += "<td>$($file.Name)</td>"
     $htmlContent += "<td>$version</td>"
