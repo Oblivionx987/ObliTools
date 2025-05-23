@@ -3,9 +3,9 @@ Powershell
 
 #region Script Info
 ## NAME
-$Script_Name = "Adobe Acrobat DC Uninstaller Only" | Yellow
+$Script_Name = "Microsoft Snipping Tool Band-Aid" | Yellow
 ##D ESCRIPTION
-$Description = "Description: This script will uninstall Adobe Acrobat DC - This contains standard and pro - Features are License based."
+$Description = "Description: This script will drop a folder into system32 containing snipping tool."
 ## AUTHOR
 $Author = "Author: Seth Burns - System Administrator II - Service Center"
 ## CREATED
@@ -21,10 +21,10 @@ $this_version = "Version: 1.0.0"
 ##      Built in Server Check
 ##      Built in Text Color Functions
 $Destination = "C:\temp" ## DO NOT CHANGE
-$Source = "\\sncorp\internal\Corp_Software\ServiceCenter_SNC_Software\Acrobat_DC_Std.zip" ## Replace with name of source
-$ZipFileName = "Acrobat_DC_Std.zip" ## Replace with name of zip
+$Source = "\\sncorp\internal\Corp_Software\ServiceCenter_SNC_Software\SnippingToolBand-Aid.zip" ## Replace with name of source
+$ZipFileName = "SnippingToolBand-Aid.zip" ## Replace with name of zip
 $ZipFilePath = Join-Path -Path $Destination -ChildPath $zipFileName ## DO NOT CHANGE
-$ExpandedFileName = "Acrobat_DC_Std" ## Replace with name of expanded folder
+$ExpandedFileName = "SnippingToolBand-Aid" ## Replace with name of expanded folder
 $ExpandedFilePath = Join-Path -Path $Destination -ChildPath $ExpandedFileName ## DO NOT CHANGE
 #endregion
 
@@ -91,7 +91,6 @@ Write-Output "--------------------"
 ## END Main Descriptor
 #endregion
 
-
 #region Zip File Transfer
 ## START Zip File Transfer
 Write-Output "Starting Zip File Transfer" | Yellow
@@ -108,7 +107,6 @@ EXIT}
 ## END Zip File Transfer
 #endregion
 
-
 #region Archive File Expansion
 ## START Archive File expansion and check
 Write-Output "Starting Archive Expansion" | Yellow
@@ -121,12 +119,5 @@ EXIT}
 ## END Archive File expansion and check
 #endregion
 
-#region Main Uninstall
-## START Main Function
-Write-Output "Begining Uninstallation" | Yellow
-Start-Process "C:\temp\Acrobat_DC_Std\acrobat_DC_uninstall.bat" -wait
-Write-Output "Uninstallation Completed" | Green
-Read-Host "Press any key to exit" | Yellow
-## END Main Function
-#endregion
+
 EXIT}                                                                                                       

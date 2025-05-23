@@ -12,7 +12,7 @@ $Author = "Author: Seth Burns - System Administrator II - Service Center"
 ##    D.04-18-25
 ##
 ## VERSION
-$this_version = "Version: 1.0.0"
+$this_version = "Version: 5.0.0"
 #endregion
 
 #region Requirements
@@ -26,11 +26,6 @@ $ZipFileName = "Acrobat_DC_Std.zip" ## Replace with name of zip
 $ZipFilePath = Join-Path -Path $Destination -ChildPath $zipFileName ## DO NOT CHANGE
 $ExpandedFileName = "Acrobat_DC_Std" ## Replace with name of expanded folder
 $ExpandedFilePath = Join-Path -Path $Destination -ChildPath $ExpandedFileName ## DO NOT CHANGE
-#endregion
-
-#region NOTES 
-##    Change Log: 1.0.0 - Initial version #>
-##
 #endregion
 
 #region Built in Text Color Functions
