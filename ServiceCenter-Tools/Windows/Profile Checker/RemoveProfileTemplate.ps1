@@ -1,3 +1,16 @@
+
+$live = "WIP"
+$bmgr = "WIP"
+$Author = "Seth Burns - System Administarator II - Service Center"
+$description = "Example commands for removing registry profiles. user profile duplicates should be removed via admin file explorer."
+$version = "1.0.0"
+
+
+
+
+
+
+
 Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-1851202536-4054275721-1027648328-91938" -Recurse
 
 Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-448539723-362288127-725345543-1047696" -Recurse

@@ -1,4 +1,8 @@
-# This script lists all drivers on the device and their associated .inf files, if available
+$description = "This script lists all drivers on the device and their associated .inf files, if available"
+$version = "1.0.1"
+$author = "Seth Burns - System Administarator II - Service Center"
+$live = "Retired"
+$bmgr = "Retired"
 
 # Get all PnP signed drivers
 $pnpDrivers = Get-WmiObject Win32_PnPSignedDriver

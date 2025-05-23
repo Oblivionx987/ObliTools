@@ -1,8 +1,9 @@
 
 $author = "Seth Burns - System Administrator II - Service Center"
 $description = "This script will check a supplied directory and check all powershell scripts for summary info."
-$live = "T"
+$live = "Test"
 $Version = "1.0.2"
+$bmgr = "Restricted"
 
 
 # Define the directory to search
@@ -63,22 +64,22 @@ foreach ($file in $ps1Files) {
 
     # Determine color based on live value
     switch ($live) {
-        "Test" { $color = "orange" }
-        "Live" { $color = "green" }
-        "WIP" { $color = "moccasin" }
-        "Retired" { $color = "red" }
-        "Restricted" { $color = "darkred" }
-        default { $color = "lightgray" }
+        "Test" { $livecolor = "orange" }
+        "Live" { $livecolor = "green" }
+        "WIP" { $livecolor = "moccasin" }
+        "Retired" { $livecolor = "salmon" }
+        "Restricted" { $livecolor = "darkred" }
+        default { $livecolor = "lightgray" }
     }
 
     # Determine color based on bmgr value
     switch ($bmgr) {
-        "Test" { $color = "orange" }
-        "Live" { $color = "green" }
-        "WIP" { $color = "moccasin" }
-        "Retired" { $color = "red" }
-        "Restricted" { $color = "darkred" }
-        default { $color = "lightgray" }
+        "Test" { $bmgrcolor = "orange" }
+        "Live" { $bmgrcolor = "green" }
+        "WIP" { $bmgrcolor = "moccasin" }
+        "Retired" { $bmgrcolor = "salmon" }
+        "Restricted" { $bmgrcolor = "darkred" }
+        default { $bmgrcolor = "lightgray" }
     }
 
     # Get the folder name
@@ -86,8 +87,8 @@ foreach ($file in $ps1Files) {
 
     # Add file information to HTML content
     $htmlContent += "<tr>"
-    $htmlContent += "<td style='background-color:$color;'>$live</td>"
-    $htmlContent += "<td style='background-color:$color;'>$bmgr</td>"
+    $htmlContent += "<td style='background-color:$livecolor;'>$live</td>"
+    $htmlContent += "<td style='background-color:$bmgrcolor;'>$bmgr</td>"
     $htmlContent += "<td>$folderName</td>"
     $htmlContent += "<td>$($file.Name)</td>"
     $htmlContent += "<td>$version</td>"

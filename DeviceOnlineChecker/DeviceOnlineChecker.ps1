@@ -5,6 +5,8 @@ $description = "This script will launch a gui for inputing devices to check if t
 $live = "Test"
 $Version = "1.0.1"
 
+$bmgr = "Restricted"
+
 
 
 

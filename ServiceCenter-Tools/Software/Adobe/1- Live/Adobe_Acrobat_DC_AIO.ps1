@@ -14,6 +14,7 @@ $Author = "Author: Seth Burns - System Administrator II - Service Center"
 ## VERSION
 $this_version = "Version: 5.0.0"
 $live = "Live"
+$bmgr = "Live"
 #endregion
 
 #region Requirements

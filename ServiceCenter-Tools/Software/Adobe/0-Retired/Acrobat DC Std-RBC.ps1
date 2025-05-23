@@ -16,6 +16,10 @@ $MainUnInstaller = "acrobat_DC_uninstall.bat"
 $vpn_test = Test-NetConnection -ComputerName "sncorp.intranet.com"
 $ping_test = $vpn_test | Select-Object PingSucceeded -Wait
 
+$live = "Retired"
+$bmgr = "Retired"
+
+
 ## Author Info
 Write-Output ("Author Seth Burns - System Administrator II - Service Center
 Tested On : 01-08-2024

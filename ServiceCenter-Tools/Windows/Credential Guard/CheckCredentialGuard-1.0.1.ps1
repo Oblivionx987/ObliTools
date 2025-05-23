@@ -1,3 +1,11 @@
+
+$live = "WIP"
+$bmgr = "WIP"
+$Author = "Seth Burns - System Administarator II - Service Center"
+$description = "Script for checking and testing Credential guard"
+$version = "1.0.1"
+
+
 <# 
 .SYNOPSIS
     Checks for Credential Guard and related LSA events on Windows 10/11.

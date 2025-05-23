@@ -7,6 +7,13 @@ $Destination = "C:\temp"
 $Source = "\\sncorp\Internal\Corp_Software\ServiceCenter_SNC_Software\SetupDiag.zip"
 $vpn_test = Test-NetConnection -ComputerName "sncorp.intranet.com"
 $ping_test = $vpn_test | Select-Object PingSucceeded -Wait
+$description = "This script will copy over files for windows 11 setup diagnostics. It will auto scan C:\$WINDOWS.~BT and outout diag logs to temp folder. "
+$live = "Live"
+$bmgr = "Live"
+
+
+
+
 
 ## Functions
 function Red { process { Write-Host $_ -ForegroundColor Red }}
