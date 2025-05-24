@@ -8,6 +8,16 @@ $Source = "\\sncorp\internal\Corp_Software\ServiceCenter_SNC_Software\Citrix_Wor
 $vpn_test = Test-NetConnection -ComputerName "sncorp.intranet.com"
 $ping_test = $vpn_test | Select-Object PingSucceeded -Wait
 
+$description = "This script will Remove Citrix Reciever & Workspace and Install Citrix workspace"
+$live = "Live"
+$bmgr = "Live"
+$author = "Seth Burns - System Administarator II - Service Center"
+$version = "22.3.2000.2105"
+
+
+
+
+
 ## Functions
 function Red { process { Write-Host $_ -ForegroundColor Red }}
 function Green { process { Write-Host $_ -ForegroundColor Green }}

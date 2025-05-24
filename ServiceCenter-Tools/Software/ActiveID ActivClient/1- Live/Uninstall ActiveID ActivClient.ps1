@@ -1,3 +1,10 @@
+
+$version = "1.0.0"
+$live = "Live"
+$bmgr = "Live"
+$description = "This script will unstall activeid active client."
+
+
 powershell
 $MyApp = Get-WmiObject -Class Win32_Product | Where-Object{$_.Name -eq "ActivID ActivClient x64"}
 $MyApp.Uninstall()

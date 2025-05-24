@@ -1,4 +1,4 @@
-## This script will install ActiveID Active Client
+## "This script will remove activeid active client and replace it with an HID creshendo mini driver as there are incompatability issues with the driver and yubiekys"
 
 Powershell
 
@@ -7,6 +7,14 @@ $Destination = "C:\temp"
 $Source = "\\sncorp\internal\Corp_Software\ServiceCenter_SNC_Software\C1150_Mini_Driver_2.1.0.21_FIXS2302004.zip"
 $vpn_test = Test-NetConnection -ComputerName "sncorp.intranet.com"
 $ping_test = $vpn_test | Select-Object PingSucceeded -Wait
+
+
+$version = "1.0.0"
+$live = "Live"
+$bmgr = "Live"
+$description = "This script will remove activeid active client and replace it with an HID creshendo mini driver as there are incompatability issues with the driver and yubiekys"
+
+
 
 ## Functions
 function Red { process { Write-Host $_ -ForegroundColor Red }}

@@ -1,3 +1,13 @@
+$author = "Seth Burns - System Administrator II - Service Center"
+$description = "This script will check active directory for missing assigned numbers"
+$live = "Restriced"
+$Version = "1.0.0"
+$bmgr = "Restricted"
+
+
+
+
+
 # Import the Active Directory module
 Import-Module ActiveDirectory
 

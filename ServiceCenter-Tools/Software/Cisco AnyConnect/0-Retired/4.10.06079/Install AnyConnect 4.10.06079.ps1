@@ -1,3 +1,9 @@
+$Version = "4.10.06079_ALWAYSON"
+$live = "Retired"
+$bmgr = "Retired"
+$description = "This script will uninstall 4.9 Cisco any connect and install 4.10"
+$author = "Seth Burns - System Administrator II - Service Center"
+
 ## This script will uninstall Cisco any connect and install version 4.10.06079
 powershell
 Expand-archive %RESOURCE_FILE% c:\Temp -Force

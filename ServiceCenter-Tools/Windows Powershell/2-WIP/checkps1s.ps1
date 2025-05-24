@@ -4,8 +4,9 @@
 
 $author = "Seth Burns - System Administrator II - Service Center"
 $description = "This script will check a supplied directory and check all powershell scripts for summary info."
-$live = "T"
+$live = "Retired"
 $Version = "1.0.1"
+$bmgr = "Retired"
 
 
 
