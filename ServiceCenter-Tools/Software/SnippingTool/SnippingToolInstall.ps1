@@ -3,9 +3,9 @@ Powershell
 
 #region Script Info
 ## NAME
-$Script_Name = "Adobe Reader DC All in One" | Yellow
+$Script_Name = "Microsoft Snipping Tool Band-Aid" | Yellow
 ##D ESCRIPTION
-$Description = "Description: This script will uninstall Adobe Acrobat DC then install Adobe Acrobat DC Reader - Features are License based."
+$Description = "Description: This script will drop a folder into system32 containing snipping tool."
 ## AUTHOR
 $Author = "Author: Seth Burns - System Administrator II - Service Center"
 ## CREATED
@@ -13,8 +13,6 @@ $Author = "Author: Seth Burns - System Administrator II - Service Center"
 ##
 ## VERSION
 $this_version = "Version: 1.0.0"
-$live = "Live"
-$bmgr = "Live"
 #endregion
 
 #region Requirements
@@ -23,10 +21,10 @@ $bmgr = "Live"
 ##      Built in Server Check
 ##      Built in Text Color Functions
 $Destination = "C:\temp" ## DO NOT CHANGE
-$Source = "\\sncorp\internal\Corp_Software\ServiceCenter_SNC_Software\Acrobat_DC_Reader.zip" ## Replace with name of source
-$ZipFileName = "Acrobat_DC_Reader.zip" ## Replace with name of zip
+$Source = "\\sncorp\internal\Corp_Software\ServiceCenter_SNC_Software\SnippingToolBand-Aid.zip" ## Replace with name of source
+$ZipFileName = "SnippingToolBand-Aid.zip" ## Replace with name of zip
 $ZipFilePath = Join-Path -Path $Destination -ChildPath $zipFileName ## DO NOT CHANGE
-$ExpandedFileName = "Acrobat_DC_Std" ## Replace with name of expanded folder
+$ExpandedFileName = "SnippingToolBand-Aid" ## Replace with name of expanded folder
 $ExpandedFilePath = Join-Path -Path $Destination -ChildPath $ExpandedFileName ## DO NOT CHANGE
 #endregion
 
@@ -42,7 +40,7 @@ function Yellow     { process { Write-Host $_ -ForegroundColor Yellow }}
 function DarkRed    { process { Write-Host $_ -ForegroundColor DarkRed }}
 #endregion
 
-cls
+Clear-Host
 
 #region Online Check 
 ## START Built in Machine Online Check
@@ -121,20 +119,5 @@ EXIT}
 ## END Archive File expansion and check
 #endregion
 
-#region Main Uninstall
-## START Main Function
-Write-Output "Begining Unstallation" | Yellow
-Start-Process "C:\temp\Acrobat_DC_Reader\Acrobat_DC_Reader_uninstall.bat" -wait
-Write-Output "Unstallation Completed" | Green
-## END Main Function
-#endregion
 
-#region Main Install
-## START Main Function
-Write-Output "Begining Installation" | Yellow
-Start-Process "C:\temp\Acrobat_DC_Reader\Acrobat_DC_Reader_install.bat" -wait
-Write-Output "Installation Completed" | Green
-Read-Host "Press any key to exit" | Yellow
-## END Main Function
-#endregion
 EXIT}                                                                                                       

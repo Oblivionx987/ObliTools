@@ -1,4 +1,12 @@
-# PowerShell script to set Adobe Acrobat Reader as the default PDF handler
+
+
+$live = "WIP"
+$bmgr = "WIP"
+
+
+
+
+$description = "PowerShell script to set Adobe Acrobat Reader as the default PDF handler"
 
 # Ensure the script is run with administrative privileges
 If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))

@@ -8,6 +8,12 @@ $Source = "\\sncorp\internal\Corp_Software\ServiceCenter_SNC_Software\Acrobat_Re
 $vpn_test = Test-NetConnection -ComputerName "sncorp.intranet.com"
 $ping_test = $vpn_test | Select-Object PingSucceeded -Wait
 
+
+$live = "Retired"
+$bmgr = "Retired"
+
+
+
 ## Functions
 function Red { process { Write-Host $_ -ForegroundColor Red }}
 function Green { process { Write-Host $_ -ForegroundColor Green }}

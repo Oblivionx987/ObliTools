@@ -1,4 +1,10 @@
-## This script will setup base configuration for Dell Command Update
+$description = "This script will setup base configuration for Dell Command Update"
+$version = "1.0.0"
+$live = "Live"
+$bmgr = "Live"
+$author = "Seth Burns - System Administarator II - Service Center"
+
+
 
 Powershell
 

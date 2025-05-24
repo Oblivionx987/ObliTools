@@ -1,3 +1,11 @@
+$version = "1.0.2"
+$author = "Seth Burns - System Administarator II - Service Center"
+$live = "Test"
+$bmgr = "Test"
+$description = "This script lists all drivers on the device and their associated .inf files, if available"
+
+
+
 # Ensure the C:\temp directory exists
 $directory = "C:\temp"
 if (-not (Test-Path -Path $directory)) {

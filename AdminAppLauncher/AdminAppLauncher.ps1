@@ -14,6 +14,15 @@
 #  10.  Launch ordering with delays     (Delay column; sequential launch)
 # -----------------------------------------------------------------------------
 
+#Region Info
+$author = "Seth Burns - System Administrator II - Service Center"
+$description = "This script will assist with launching applications as an admin - the app has to be run as admin, and will force time out after an 8 hour shift."
+$live = "Test"
+$Version = "1.0.2"
+$bmgr = "Restricted"
+
+
+
 #region ► SET‑UP & PREREQS ◄
 Add-Type -AssemblyName System.Windows.Forms, System.Drawing, Microsoft.VisualBasic
 

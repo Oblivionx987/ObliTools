@@ -8,6 +8,15 @@ $Source = "\\sncorp\internal\Corp_Software\ServiceCenter_SNC_Software\7-ZIP-32bi
 $vpn_test = Test-NetConnection -ComputerName "sncorp.intranet.com"
 $ping_test = $vpn_test | Select-Object PingSucceeded -Wait
 
+$version = "1.0.0"
+$live = "Live"
+$bmgr = "Live"
+$description = "This script will Install 7-ZIP 32Bit"
+
+
+
+
+
 ## Functions
 function Red { process { Write-Host $_ -ForegroundColor Red }}
 function Green { process { Write-Host $_ -ForegroundColor Green }}

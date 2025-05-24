@@ -2,6 +2,12 @@
 $outputDirectory = "C:\temp"
 $machinename = $env:COMPUTERNAME
 
+$live = "Retired"
+$bmgr = "Retired"
+$Author = "Seth Burns - System Administarator II - Service Center"
+$description = "Preliminary script for checking and testing Credential guard"
+$version = "1.0.0"
+
 # Create the output directory if it doesn't exist
 if (-Not (Test-Path -Path $outputDirectory)) {
     New-Item -ItemType Directory -Path $outputDirectory

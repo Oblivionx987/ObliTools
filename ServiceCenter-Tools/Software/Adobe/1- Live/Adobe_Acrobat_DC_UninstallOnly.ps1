@@ -13,6 +13,8 @@ $Author = "Author: Seth Burns - System Administrator II - Service Center"
 ##
 ## VERSION
 $this_version = "Version: 1.0.0"
+$live = "Live"
+$bmgr = "Live"
 #endregion
 
 #region Requirements
@@ -40,7 +42,7 @@ function Yellow     { process { Write-Host $_ -ForegroundColor Yellow }}
 function DarkRed    { process { Write-Host $_ -ForegroundColor DarkRed }}
 #endregion
 
-cls
+Clear-Host
 
 #region Online Check 
 ## START Built in Machine Online Check
@@ -91,6 +93,7 @@ Write-Output "--------------------"
 ## END Main Descriptor
 #endregion
 
+
 #region Zip File Transfer
 ## START Zip File Transfer
 Write-Output "Starting Zip File Transfer" | Yellow
@@ -106,6 +109,7 @@ if (Test-Path -Path $ZipFilePath -PathType Leaf) {
 EXIT}
 ## END Zip File Transfer
 #endregion
+
 
 #region Archive File Expansion
 ## START Archive File expansion and check

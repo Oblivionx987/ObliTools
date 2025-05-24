@@ -1,3 +1,14 @@
+
+
+$live = "WIP"
+$bmgr = "WIP"
+$Author = "Seth Burns - System Administarator II - Service Center"
+$description = "Script for checking registry profiles and user profiles for duplicates. It will output all results. It will not remove anything. See {remove profile template for examples}"
+$version = "1.0.1"
+
+
+
+
 # Function to get user profiles from the registry
 function Get-RegistryUserProfiles {
     $profiles = @()

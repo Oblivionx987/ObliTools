@@ -1,4 +1,16 @@
 
+
+$author = "Seth Burns - System Administrator II - Service Center"
+$description = "This script will launch a gui for inputing devices to check if they are online"
+$live = "Test"
+$Version = "1.0.1"
+
+$bmgr = "Restricted"
+
+
+
+
+
 <#
 .SYNOPSIS
     Device Status Monitor – name-only add support + minor UX tweaks.

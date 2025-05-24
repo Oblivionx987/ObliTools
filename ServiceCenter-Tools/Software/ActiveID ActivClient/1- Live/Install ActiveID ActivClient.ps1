@@ -8,6 +8,15 @@ $Source = "\\sncorp\internal\Corp_Software\ServiceCenter_SNC_Software\ActiveClie
 $vpn_test = Test-NetConnection -ComputerName "sncorp.intranet.com"
 $ping_test = $vpn_test | Select-Object PingSucceeded -Wait
 
+
+$version = "1.0.0"
+$live = "Live"
+$bmgr = "Live"
+$description = "This script will install activeid active client for use with checking dod cac cards or setting up a pin on a cac card. Can also be used to check info on a card."
+
+
+
+
 ## Functions
 function Red { process { Write-Host $_ -ForegroundColor Red }}
 function Green { process { Write-Host $_ -ForegroundColor Green }}

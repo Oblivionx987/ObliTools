@@ -1,4 +1,10 @@
-## This script will Install Google Earth Pro
+$description = "This script will Install Google Earth Pro"
+$live = "WIP"
+$bmgr = "WIP"
+$author = "Seth Burns - System Administarator II - Service Center"
+$version = "1.0.0"
+
+
 
 powershell
 ## Starting File Transfer

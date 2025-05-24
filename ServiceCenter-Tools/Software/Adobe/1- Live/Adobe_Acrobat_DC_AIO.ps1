@@ -2,17 +2,13 @@ Powershell
 
 
 #region Script Info
-## NAME
 $Script_Name = "Adobe Acrobat DC All in One" | Yellow
-##D ESCRIPTION
 $Description = "Description: This script will uninstall Adobe Acrobat DC then install Adobe Acrobat DC- This contains standard and pro - Features are License based."
-## AUTHOR
-$Author = "Author: Seth Burns - System Administrator II - Service Center"
-## CREATED
-##    D.04-18-25
-##
-## VERSION
-$this_version = "Version: 1.0.0"
+$Author = "Seth Burns - System Administrator II - Service Center"
+$last_tested = "04-18-25"
+$version = "Version: 5.0.0"
+$live = "Live"
+$bmgr = "Live"
 #endregion
 
 #region Requirements
@@ -28,11 +24,6 @@ $ExpandedFileName = "Acrobat_DC_Std" ## Replace with name of expanded folder
 $ExpandedFilePath = Join-Path -Path $Destination -ChildPath $ExpandedFileName ## DO NOT CHANGE
 #endregion
 
-#region NOTES 
-##    Change Log: 1.0.0 - Initial version #>
-##
-#endregion
-
 #region Built in Text Color Functions
 function Red        { process { Write-Host $_ -ForegroundColor Red }}
 function Green      { process { Write-Host $_ -ForegroundColor Green }}
@@ -40,7 +31,7 @@ function Yellow     { process { Write-Host $_ -ForegroundColor Yellow }}
 function DarkRed    { process { Write-Host $_ -ForegroundColor DarkRed }}
 #endregion
 
-cls
+Clear-Host
 
 #region Online Check 
 ## START Built in Machine Online Check
@@ -58,7 +49,7 @@ if ($ping_test -match "True") {
 ## File server path
 $filePath = "\\sncorp\internal\Corp_Software\ServiceCenter_SNC_Software"
 ## Function to check if the file path is reachable
-function Check-FilePath {
+function CheckFilePath {
     param (
         [string]$file
     )
@@ -85,7 +76,8 @@ Write-Output "The file server was successfully reached." | Green
 Write-Output "--------------------"
 Write-Output "$Author" | Yellow
 Write-Output "$Script_Name"
-Write-Output ("$this_version") | Yellow
+Write-Output "$version , $last_tested" | Yellow
+Write-Output "$live , $bmgr"
 Write-Output "$Description" | Yellow
 Write-Output "--------------------"
 ## END Main Descriptor
