@@ -1,45 +1,45 @@
-<#
-.SYNOPSIS
-    Collect extensive diagnostic information from the local machine and output an interactive HTML report.
 
-.DESCRIPTION
-    This script gathers and displays in a collapsible HTML report:
-      1. System Information (computer, BIOS, OS, CPU, memory, uptime).
-      2. Motherboard Information.
-      3. GPU (Graphics Adapter) Details.
-      4. Physical Memory Modules.
-      5. Installed Software (queried via the registry instead of Win32_Product).
-      6. Installed Hotfixes / Updates.
-      7. Security Policies (machine and user scope via gpresult).
-      8. Disk Usage.
-      9. SMART Disk Health.
-      10. Network Configuration (including DNS settings).
-      11. All Services.
-      12. Scheduled Tasks.
-      13. Local Users.
-      14. Local Groups.
-      15. Environment Variables.
-      16. Recent System Errors from the Event Log.
-      17. Startup Applications.
-      18. Top Processes by CPU and Memory usage.
-      19. Windows Defender/Antivirus Status.
-      20. Performance Metrics (CPU load, available memory, disk I/O).
-      21. An Error Log (if any issues were encountered).
-
-    The HTML report is interactive with a table of contents and collapsible sections.
-
-.NOTES
-    - Requires elevated privileges (run as Administrator).
-    - Compatible with Windows 10/11, Server 2016/2019/2022 (PowerShell 5.1+).
-
-.EXAMPLE
-    .\Collect-Diagnostics-Extended.ps1 -OutputPath "C:\Temp\MyDiag.html"
-#>
-
-[CmdletBinding()]
+#region Parameters (must be at the very top for PowerShell)
 param(
     [string]$OutputPath = "C:\Temp\$env:COMPUTERNAME`_diag.html"
 )
+#endregion
+
+#region Script Info
+$Script_Name = "Full System Information Diagnostic Report"
+$Description = "This script collects extensive diagnostic information from the local machine and outputs an interactive HTML report."
+$Author = "Seth Burns - System Administrator II - Service Center"
+$last_tested = "05-23-25"
+$version = "1.0.0"
+$live = "WIP"
+$bmgr = "WIP"
+#endregion
+
+#region Text Colors 
+function Red     { process { Write-Host $_ -ForegroundColor Red }}
+function Green   { process { Write-Host $_ -ForegroundColor Green }}
+function Yellow  { process { Write-Host $_ -ForegroundColor Yellow }}
+function Blue    { process { Write-Host $_ -ForegroundColor Blue }}
+function Cyan    { process { Write-Host $_ -ForegroundColor Cyan }}
+function Magenta { process { Write-Host $_ -ForegroundColor Magenta }}
+function White   { process { Write-Host $_ -ForegroundColor White }}
+function Gray    { process { Write-Host $_ -ForegroundColor Gray }}
+#endregion
+
+
+#region Main Descriptor
+## START Main Descriptor
+Write-Output "---------------------------------------------" | Yellow
+Write-Output "$Author" | Yellow
+Write-Output "$Script_Name" | Yellow
+Write-Output "Current Version - $version , Last Test - $last_tested" | Yellow
+Write-Output "Testing stage - $live , Bomgar stage - $bmgr" | Yellow
+Write-Output "Description - $Description" | Yellow
+Write-Output "---------------------------------------------" | Yellow
+## END Main Descriptor
+#endregion
+
+
 
 # Create an array to log any errors encountered in the various sections
 $global:ErrorLog = @()
@@ -53,8 +53,19 @@ $operSys  = Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction Silent
 $biosInfo = Get-CimInstance -ClassName Win32_BIOS -ErrorAction SilentlyContinue
 $cpuInfo  = Get-CimInstance -ClassName Win32_Processor -ErrorAction SilentlyContinue
 
-$uptime = if ($operSys) { $now - ([Management.ManagementDateTimeConverter]::ToDateTime($operSys.LastBootUpTime)) } else { $null }
-$uptimeFormatted = if ($uptime) { "{0} days, {1} hours, {2} minutes, {3} seconds" -f $uptime.Days, $uptime.Hours, $uptime.Minutes, $uptime.Seconds } else { "N/A" }
+
+# Defensive: Only convert LastBootUpTime if it is not null/empty
+if ($operSys -and $operSys.LastBootUpTime) {
+    try {
+        $lastBoot = [Management.ManagementDateTimeConverter]::ToDateTime($operSys.LastBootUpTime)
+        $uptime = $now - $lastBoot
+        $uptimeFormatted = "{0} days, {1} hours, {2} minutes, {3} seconds" -f $uptime.Days, $uptime.Hours, $uptime.Minutes, $uptime.Seconds
+    } catch {
+        $uptimeFormatted = "N/A"
+    }
+} else {
+    $uptimeFormatted = "N/A"
+}
 
 # Ensure all collected data is utilized
 $systemInfo = if ($compSys -and $operSys -and $biosInfo -and $cpuInfo) {
@@ -64,7 +75,16 @@ $systemInfo = if ($compSys -and $operSys -and $biosInfo -and $cpuInfo) {
         Model                 = $compSys.Model
         SerialNumber          = $biosInfo.SerialNumber
         BIOS_Version          = $biosInfo.SMBIOSBIOSVersion
-        BIOS_ReleaseDate      = ([Management.ManagementDateTimeConverter]::ToDateTime($biosInfo.ReleaseDate))
+
+        BIOS_ReleaseDate      = if ($biosInfo -and $biosInfo.ReleaseDate) {
+            try {
+                [Management.ManagementDateTimeConverter]::ToDateTime($biosInfo.ReleaseDate)
+            } catch {
+                "N/A"
+            }
+        } else {
+            "N/A"
+        }
         OSName                = $operSys.Caption
         OSVersion             = $operSys.Version
         SystemType            = $compSys.SystemType
@@ -389,7 +409,34 @@ if ($global:ErrorLog.Count -gt 0) {
     $htmlSections["ErrorLog"] = $errorLogHtmlFragment
 }
 
-# Combine all HTML sections into the final report
+# Section display names for pretty headers
+$sectionTitles = @{
+    SystemInfo = 'System Information'
+    BaseBoard = 'Motherboard Information'
+    GPUInfo = 'GPU (Graphics Adapter) Details'
+    MemoryModules = 'Physical Memory Modules'
+    InstalledSoftware = 'Installed Software'
+    Hotfixes = 'Installed Hotfixes / Updates'
+    MachinePolicy = 'Security Policy (Machine Scope)'
+    UserPolicy = 'Security Policy (User Scope)'
+    DiskUsage = 'Disk Usage'
+    SmartDiskHealth = 'SMART Disk Health'
+    Network = 'Network Configuration'
+    Services = 'All Services'
+    ScheduledTasks = 'Scheduled Tasks'
+    LocalUsers = 'Local Users'
+    LocalGroups = 'Local Groups'
+    EnvironmentVariables = 'Environment Variables'
+    SystemErrors = 'Recent System Errors'
+    StartupApplications = 'Startup Applications'
+    TopCPUProcesses = 'Top Processes by CPU Usage'
+    TopMemoryProcesses = 'Top Processes by Memory Usage'
+    DefenderStatus = 'Windows Defender/Antivirus Status'
+    PerformanceMetrics = 'Performance Metrics'
+    ErrorLog = 'Error Log'
+}
+
+# HTML header with improved style and script for collapsible sections
 $htmlHeader = @"
 <html>
   <head>
@@ -420,34 +467,34 @@ $htmlHeader = @"
     </script>
   </head>
   <body>
-    <h1>Comprehensive Diagnostic Report for $($env:COMPUTERNAME)</h1>
+    <h1>Comprehensive Sysyem Info Report for $($env:COMPUTERNAME)</h1>
     <p><strong>Report Generated on:</strong> $(Get-Date)</p>
     <div id='toc'>
       <h2>Summary / Table of Contents</h2>
       <div>
-        <a href='#SystemInfo' class='button'>System Info</a>
-        <a href='#BaseBoard' class='button'>Motherboard</a>
-        <a href='#GPUInfo' class='button'>GPU</a>
-        <a href='#MemoryModules' class='button'>Memory Modules</a>
-        <a href='#InstalledSoftware' class='button'>Installed Software</a>
-        <a href='#Hotfixes' class='button'>Hotfixes</a>
-        <a href='#MachinePolicy' class='button'>Machine Policy</a>
-        <a href='#UserPolicy' class='button'>User Policy</a>
-        <a href='#DiskUsage' class='button'>Disk Usage</a>
-        <a href='#SmartDiskHealth' class='button'>SMART Disk Health</a>
-        <a href='#Network' class='button'>Network</a>
-        <a href='#Services' class='button'>Services</a>
-        <a href='#ScheduledTasks' class='button'>Scheduled Tasks</a>
-        <a href='#LocalUsers' class='button'>Local Users</a>
-        <a href='#LocalGroups' class='button'>Local Groups</a>
-        <a href='#EnvironmentVariables' class='button'>Environment Variables</a>
-        <a href='#SystemErrors' class='button'>System Errors</a>
-        <a href='#StartupApplications' class='button'>Startup Applications</a>
-        <a href='#TopCPUProcesses' class='button'>Top CPU Processes</a>
-        <a href='#TopMemoryProcesses' class='button'>Top Memory Processes</a>
-        <a href='#DefenderStatus' class='button'>Defender Status</a>
-        <a href='#PerformanceMetrics' class='button'>Performance Metrics</a>
-        <a href='#ErrorLog' class='button'>Error Log</a>
+        <a href='#SystemInfo-section' class='button'>System Info</a>
+        <a href='#BaseBoard-section' class='button'>Motherboard</a>
+        <a href='#GPUInfo-section' class='button'>GPU</a>
+        <a href='#MemoryModules-section' class='button'>Memory Modules</a>
+        <a href='#InstalledSoftware-section' class='button'>Installed Software</a>
+        <a href='#Hotfixes-section' class='button'>Hotfixes</a>
+        <a href='#MachinePolicy-section' class='button'>Machine Policy</a>
+        <a href='#UserPolicy-section' class='button'>User Policy</a>
+        <a href='#DiskUsage-section' class='button'>Disk Usage</a>
+        <a href='#SmartDiskHealth-section' class='button'>SMART Disk Health</a>
+        <a href='#Network-section' class='button'>Network</a>
+        <a href='#Services-section' class='button'>Services</a>
+        <a href='#ScheduledTasks-section' class='button'>Scheduled Tasks</a>
+        <a href='#LocalUsers-section' class='button'>Local Users</a>
+        <a href='#LocalGroups-section' class='button'>Local Groups</a>
+        <a href='#EnvironmentVariables-section' class='button'>Environment Variables</a>
+        <a href='#SystemErrors-section' class='button'>System Errors</a>
+        <a href='#StartupApplications-section' class='button'>Startup Applications</a>
+        <a href='#TopCPUProcesses-section' class='button'>Top CPU Processes</a>
+        <a href='#TopMemoryProcesses-section' class='button'>Top Memory Processes</a>
+        <a href='#DefenderStatus-section' class='button'>Defender Status</a>
+        <a href='#PerformanceMetrics-section' class='button'>Performance Metrics</a>
+        <a href='#ErrorLog-section' class='button'>Error Log</a>
       </div>
     </div>
 "@
@@ -457,7 +504,22 @@ $htmlFooter = @"
 </html>
 "@
 
-$htmlContent = $htmlHeader + ($htmlSections.Values -join "") + $htmlFooter
+# Build collapsible HTML sections
+$htmlContent = $htmlHeader
+foreach ($key in $sectionTitles.Keys) {
+    if ($htmlSections.ContainsKey($key)) {
+        $sectionId = "$key-section"
+        $contentId = "$key-content"
+        $title = $sectionTitles[$key]
+        # Expand SystemInfo by default, others collapsed
+        $display = if ($key -eq 'SystemInfo') { 'block' } else { 'none' }
+        $htmlContent += "<div class='section' id='$sectionId'>"
+        $htmlContent += "<h2 onclick='toggleSection(`"$contentId`")'>$title <span class='toggle'>(click to expand/collapse)</span></h2>"
+        $htmlContent += "<div id='$contentId' style='display:$display;'>$($htmlSections[$key])</div>"
+        $htmlContent += "</div>"
+    }
+}
+$htmlContent += $htmlFooter
 
 # Write the report to the output path
 try {

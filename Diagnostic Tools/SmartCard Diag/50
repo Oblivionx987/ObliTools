@@ -1,0 +1,17 @@
+﻿<html>
+<head>
+    <meta charset='UTF-8'>
+    <title>Smart Card Troubleshooting Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        h2, h3 { color: #2E86C1; }
+        pre { background-color: #F4F6F7; padding: 10px; border: 1px solid #D5D8DC; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #D5D8DC; padding: 8px; text-align: left; }
+        th { background-color: #2E86C1; color: white; }
+    </style>
+</head>
+<body>
+    <h2>Smart Card Troubleshooting Report</h2>
+    <p>Report generated on 05/25/2025 00:02:56</p><h3>1. Smart Card Services Status</h3><table> <colgroup><col/><col/><col/></colgroup> <tr><th>ServiceName</th><th>Status</th><th>StartType</th></tr> <tr><td>SCardSvr</td><td>Stopped</td><td>Manual</td></tr> <tr><td>ScDeviceEnum</td><td>Stopped</td><td>Manual</td></tr> <tr><td>SCPolicySvc</td><td>Stopped</td><td>Manual</td></tr> </table><br/><h3>2. Smart Card Readers</h3><table> <colgroup><col/><col/><col/></colgroup> <tr><th>ReaderName</th><th>DeviceID</th><th>Status</th></tr> <tr><td>Error</td><td>N/A</td><td>Could not query smart card readers (Win32_SmartCardReader unavailable)</td></tr> </table><br/><h3>3. Relevant Smart Card Event Logs</h3><table> <colgroup><col/><col/><col/><col/><col/><col/></colgroup> <tr><th>LogName</th><th>EventID</th><th>EntryType</th><th>Source</th><th>TimeWritten</th><th>Message</th></tr> <tr><td>System</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>No relevant events found.</td></tr> <tr><td>Application</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>No relevant events found.</td></tr> </table></body>
+</html>

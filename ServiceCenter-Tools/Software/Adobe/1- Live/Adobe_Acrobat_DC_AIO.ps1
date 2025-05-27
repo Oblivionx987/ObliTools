@@ -2,11 +2,11 @@ Powershell
 
 
 #region Script Info
-$Script_Name = "Adobe Acrobat DC All in One" | Yellow
-$Description = "Description: This script will uninstall Adobe Acrobat DC then install Adobe Acrobat DC- This contains standard and pro - Features are License based."
+$Script_Name = "Adobe Acrobat DC All in One"
+$Description = "This script will uninstall Adobe Acrobat DC then install Adobe Acrobat DC- This contains standard and pro - Features are License based."
 $Author = "Seth Burns - System Administrator II - Service Center"
 $last_tested = "04-18-25"
-$version = "Version: 5.0.0"
+$version = "5.0.0"
 $live = "Live"
 $bmgr = "Live"
 #endregion

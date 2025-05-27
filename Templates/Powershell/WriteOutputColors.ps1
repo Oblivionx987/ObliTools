@@ -4,7 +4,7 @@ $Version = "1.0.0"
 $Description = "This is a test"
 #endregion
 
-#region > Text Color <
+#region Text Colors 
 function Red     { process { Write-Host $_ -ForegroundColor Red }}
 function Green   { process { Write-Host $_ -ForegroundColor Green }}
 function Yellow  { process { Write-Host $_ -ForegroundColor Yellow }}

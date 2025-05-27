@@ -1,5 +1,14 @@
 Powershell
 
+#region Script Info
+$Script_Name = "Adobe Acrobat DC All in One"
+$Description = "This script will copy over files for windows 11 setup diagnostics. It will auto scan C:\$WINDOWS.~BT and outout diag logs to temp folder."
+$Author = "Seth Burns - System Administrator II - Service Center"
+$last_tested = "05-24-2025"
+$version = "2.0.0"
+$live = "Test"
+$bmgr = "Test"
+#endregion
 
 
 ## Variables
@@ -7,19 +16,22 @@ $Destination = "C:\temp"
 $Source = "\\sncorp\Internal\Corp_Software\ServiceCenter_SNC_Software\SetupDiag.zip"
 $vpn_test = Test-NetConnection -ComputerName "sncorp.intranet.com"
 $ping_test = $vpn_test | Select-Object PingSucceeded -Wait
-$description = "This script will copy over files for windows 11 setup diagnostics. It will auto scan C:\$WINDOWS.~BT and outout diag logs to temp folder. "
-$live = "Live"
-$bmgr = "Live"
 
 
 
 
 
-## Functions
-function Red { process { Write-Host $_ -ForegroundColor Red }}
-function Green { process { Write-Host $_ -ForegroundColor Green }}
-function Yellow { process { Write-Host $_ -ForegroundColor Yellow }}
-function DarkRed { process { Write-Host $_ -ForegroundColor DarkRed }}
+
+#region Text Colors 
+function Red     { process { Write-Host $_ -ForegroundColor Red }}
+function Green   { process { Write-Host $_ -ForegroundColor Green }}
+function Yellow  { process { Write-Host $_ -ForegroundColor Yellow }}
+function Blue    { process { Write-Host $_ -ForegroundColor Blue }}
+function Cyan    { process { Write-Host $_ -ForegroundColor Cyan }}
+function Magenta { process { Write-Host $_ -ForegroundColor Magenta }}
+function White   { process { Write-Host $_ -ForegroundColor White }}
+function Gray    { process { Write-Host $_ -ForegroundColor Gray }}
+#endregion
 
 
 ## Author Info

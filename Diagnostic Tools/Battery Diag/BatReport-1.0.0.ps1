@@ -1,5 +1,40 @@
+
+
+Powershell
+
+#region Script Info
+$Script_Name = "Battery Report"
+$Description = "This script will generate a battery report for the local machine and save it as an HTML file"
+$Author = "Seth Burns - System Administrator II - Service Center"
+$last_tested = "05/23/2025"
+$version = "1.0.0"
+$live = "Retired"
+$bmgr = "Retired"
+#endregion
+
+## Functions
+function Red { process { Write-Host $_ -ForegroundColor Red }}
+function Green { process { Write-Host $_ -ForegroundColor Green }}
+function Yellow { process { Write-Host $_ -ForegroundColor Yellow }}
+function DarkRed { process { Write-Host $_ -ForegroundColor DarkRed }}
+
+#region Main Descriptor
+## START Main Descriptor
+Write-Output "---------------------------------------------" | Yellow
+Write-Output "$Author" | Yellow
+Write-Output "$Script_Name" | Yellow
+Write-Output "Current Version - $version , Last Test - $last_tested" | Yellow
+Write-Output "Testing stage - $live , Bomgar stage - $bmgr" | Yellow
+Write-Output "Description - $Description" | Yellow
+Write-Output "---------------------------------------------" | Yellow
+## END Main Descriptor
+#endregion
+
+
+
 # Get the local machine name
 $machineName = $env:COMPUTERNAME
+Write-Output ("$machineName detected")
 
 # Define the output file
 $outputFile = "C:\Temp\Battery Report for $machineName.html"

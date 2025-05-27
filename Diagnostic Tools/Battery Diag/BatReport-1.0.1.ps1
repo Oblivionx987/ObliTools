@@ -1,31 +1,42 @@
+#region Script Info
+$Script_Name = "Battery Report"
+$Description = "This script will generate a battery report for the local machine and save it as an HTML file"
+$Author = "Seth Burns - System Administrator II - Service Center"
+$last_tested = "05/23/2025"
+$version = "1.0.1"
+$live = "WIP"
+$bmgr = "WIP"
+#endregion
+
+#region Text Colors 
+function Red     { process { Write-Host $_ -ForegroundColor Red }}
+function Green   { process { Write-Host $_ -ForegroundColor Green }}
+function Yellow  { process { Write-Host $_ -ForegroundColor Yellow }}
+function Blue    { process { Write-Host $_ -ForegroundColor Blue }}
+function Cyan    { process { Write-Host $_ -ForegroundColor Cyan }}
+function Magenta { process { Write-Host $_ -ForegroundColor Magenta }}
+function White   { process { Write-Host $_ -ForegroundColor White }}
+function Gray    { process { Write-Host $_ -ForegroundColor Gray }}
+#endregion
+
+#region Main Descriptor
+## START Main Descriptor
+Write-Output "---------------------------------------------" | Yellow
+Write-Output "$Author" | Yellow
+Write-Output "$Script_Name" | Yellow
+Write-Output "Current Version - $version , Last Test - $last_tested" | Yellow
+Write-Output "Testing stage - $live , Bomgar stage - $bmgr" | Yellow
+Write-Output "Description - $Description" | Yellow
+Write-Output "---------------------------------------------" | Yellow
+## END Main Descriptor
+#endregion
 
 
-Powershell
 
-## Functions
-function Red { process { Write-Host $_ -ForegroundColor Red }}
-function Green { process { Write-Host $_ -ForegroundColor Green }}
-function Yellow { process { Write-Host $_ -ForegroundColor Yellow }}
-function DarkRed { process { Write-Host $_ -ForegroundColor DarkRed }}
-
-
-
-## Author Info
-Write-Output ("Author Seth Burns - System Administrator II - Service Center
-Tested On : 01-08-2024
-This script will Generate a battery report for current device.
-Associated Resource: N/A ") | DarkRed
-
-## Description
-Write-Output ("Description:
-This script will Generate a battery report for current device.") | Green
-
-read-host "Please read the description, then press ENTER to Continue"
 
 
 # Get the local machine name
 $machineName = $env:COMPUTERNAME
-Write-Output ("$machineName detected")
 
 # Define the output file
 $outputFile = "C:\Temp\Battery Report for $machineName.html"

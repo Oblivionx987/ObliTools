@@ -12,7 +12,7 @@ $Author = "Author: Seth Burns - System Administrator II - Service Center"
 ##    D.04-18-25
 ##
 ## VERSION
-$this_version = "Version: 1.0.0"
+$this_version = "5.0.0"
 $live = "Live"
 $bmgr = "Live"
 #endregion

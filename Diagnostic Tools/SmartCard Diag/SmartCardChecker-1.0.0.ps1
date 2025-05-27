@@ -1,3 +1,36 @@
+#region Script Info
+$Script_Name = "Smart Card Troubleshooting Script"
+$Description = "This script checks the status of smart card services, lists smart card readers, retrieves relevant event logs, and optionally runs certutil -scinfo to gather information about smart cards. It compiles the findings into an HTML report for easy review."
+$Author = "Seth Burns - System Administrator II - Service Center"
+$last_tested = "04-18-25"
+$version = "1.0.0"
+$live = "Retired"
+$bmgr = "Retired"
+#endregion
+
+#region Text Colors 
+function Red     { process { Write-Host $_ -ForegroundColor Red }}
+function Green   { process { Write-Host $_ -ForegroundColor Green }}
+function Yellow  { process { Write-Host $_ -ForegroundColor Yellow }}
+function Blue    { process { Write-Host $_ -ForegroundColor Blue }}
+function Cyan    { process { Write-Host $_ -ForegroundColor Cyan }}
+function Magenta { process { Write-Host $_ -ForegroundColor Magenta }}
+function White   { process { Write-Host $_ -ForegroundColor White }}
+function Gray    { process { Write-Host $_ -ForegroundColor Gray }}
+#endregion
+
+#region Main Descriptor
+## START Main Descriptor
+Write-Output "---------------------------------------------" | Yellow
+Write-Output "$Author" | Yellow
+Write-Output "$Script_Name" | Yellow
+Write-Output "Current Version - $version , Last Test - $last_tested" | Yellow
+Write-Output "Testing stage - $live , Bomgar stage - $bmgr" | Yellow
+Write-Output "Description - $Description" | Yellow
+Write-Output "---------------------------------------------" | Yellow
+## END Main Descriptor
+#endregion
+
 <#
 .SYNOPSIS
    Troubleshoots common smart card issues and outputs findings to an HTML report.
@@ -20,24 +53,36 @@
    If $true, attempts a certutil -scinfo command to collect additional info.
 
 .EXAMPLE
-   .\TroubleshootSmartCard.ps1 -ReportPath "C:\Temp\MyReport.html" -MaxEvents 50 -CheckCertUtil $true
+   .\SmartCardChecker-1.0.0.ps1 -ReportPath "C:\Temp\MyReport.html" -MaxEvents 50 -CheckCertUtil $true
 
 .NOTES
    Requires Administrator privileges.
 #>
 
-[CmdletBinding()]
 Param(
-    [string]
-    $ReportPath = "C:\Temp\SmartCardReport_{0:yyyy-MM-dd_HH-mm-ss}.html" -f (Get-Date),
-
-    [ValidateRange(1, 1000)]
-    [int]
-    $MaxEvents = 20,
-
-    [switch]
-    $CheckCertUtil
+    [string]$ReportPath,
+    [int]$MaxEvents = 50,
+    [switch]$CheckCertUtil
 )
+
+# Convert SwitchParameter to boolean
+$CheckCertUtil = [bool]$CheckCertUtil
+
+# Ensure $ReportPath is a valid string
+if (-not [string]::IsNullOrWhiteSpace($ReportPath) -and -not ($ReportPath -is [string])) {
+    Write-Error "The value for -ReportPath must be a valid string. You provided: $ReportPath" -ErrorAction Stop
+}
+
+# Assign default value if $ReportPath is not provided or is invalid
+if (-not $ReportPath -or $ReportPath -eq $false) {
+    $ReportPath = "C:\Temp\SmartCardReport_{0:yyyy-MM-dd_HH-mm-ss}.html" -f (Get-Date)
+}
+
+# Validate $MaxEvents range
+if (-not $MaxEvents -or $MaxEvents -lt 1 -or $MaxEvents -gt 1000) {
+    Write-Warning "Invalid value for -MaxEvents. Defaulting to 50."
+    $MaxEvents = 50
+}
 
 Set-StrictMode -Version Latest
 
@@ -170,8 +215,9 @@ $reportSections.Add(
 #------------------------------------------------------------------------------
 if ($CheckCertUtil) {
     Write-Host "Running certutil -scinfo..."
-    $certutilPath = (Get-Command "certutil.exe" -ErrorAction SilentlyContinue)?.Source
-    if ($certutilPath) {
+    $certutilCommand = Get-Command "certutil.exe" -ErrorAction SilentlyContinue
+    if ($certutilCommand) {
+        $certutilPath = $certutilCommand.Source
         try {
             $certutilOutput = certutil -scinfo 2>&1
             $reportSections.Add("<h3>4. Certutil -scinfo Output</h3><pre>$certutilOutput</pre>")

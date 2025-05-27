@@ -2,17 +2,10 @@ Powershell
 
 
 #region Script Info
-## NAME
 $Script_Name = "Adobe Reader DC All in One" | Yellow
-##D ESCRIPTION
 $Description = "Description: This script will uninstall Adobe Acrobat DC then install Adobe Acrobat DC Reader - Features are License based."
-## AUTHOR
 $Author = "Author: Seth Burns - System Administrator II - Service Center"
-## CREATED
-##    D.04-18-25
-##
-## VERSION
-$this_version = "Version: 1.0.0"
+$this_version = "5.0.0"
 $live = "Live"
 $bmgr = "Live"
 #endregion
