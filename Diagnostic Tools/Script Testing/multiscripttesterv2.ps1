@@ -1,7 +1,13 @@
 # Define the scripts to run in the specified order
 $scripts = @(
-    "C:\Users\Oblivion\OneDrive\Seth\Oblivion Vault\ObliTools\ObliTools-1\Diagnostic Tools\Script Testing\checkps1sv2_copy.ps1",
-    "C:\Users\Oblivion\OneDrive\Seth\Oblivion Vault\ObliTools\ObliTools-1\Diagnostic Tools\Script Testing\testing.ps1"
+    "C:\Testing\Install 7-ZIP 32Bit.ps1",
+    "C:\Testing\Install 7-ZIP 64Bit.ps1",
+    "C:\testing\Adobe_Acrobat_DC_InstallOnly.ps1",
+    "C:\testing\Adobe_Acrobat_DC_AIO.ps1",
+    "C:\testing\Adobe_Acrobat_DC_UninstallOnly.ps1",
+    "C:\testing\Adobe_Acrobat_Reader_InstallOnly.ps1",
+    "C:\testing\Adobe_Acrobat_Reader_AIO.ps1",
+    "C:\testing\Adobe_Acrobat_Reader_UninstallOnly.ps1"
 )
 
 # Define the log file path

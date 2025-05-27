@@ -1,53 +1,44 @@
 $author = "Seth Burns - System Administrator II - Service Center"
 $description = "This script will check active directory for expiring accounts"
+$last_tested = "5-27-2025
 $live = "Restriced"
 $Version = "1.0.1"
 $bmgr = "Restricted"
 
-
-
-
 # Import Active Directory module
 Import-Module ActiveDirectory
 
-# Define the number of days to check for expiring accounts
-$daysToCheck = 7
+# Define the number of days to check for password last set
+$daysThreshold = 90
 
 # Get the current date
 $currentDate = Get-Date
 
-# Get the date after the specified number of days
-$futureDate = $currentDate.AddDays($daysToCheck)
+# Get the date 90 days before the current date
+$thresholdDate = $currentDate.AddDays(-$daysThreshold)
 
 # Get all user accounts
-$users = Get-ADUser -Filter * -Property Name, AccountExpirationDate
+$users = Get-ADUser -Filter * -Property Name, PasswordLastSet
 
-# Arrays to store expired and expiring accounts
-$expiredAccounts = @()
-$expiringAccounts = @()
+# Array to store accounts with password last set 90 days ago or more
+$accountsWithOldPasswords = @()
 
 foreach ($user in $users) {
-    $expirationDate = $user.AccountExpirationDate
+    $passwordLastSetDate = $user.PasswordLastSet
 
-    if ($expirationDate) {
-        if ($expirationDate -lt $currentDate) {
-            # Account is expired
-            $expiredAccounts += $user
-        } elseif ($expirationDate -le $futureDate) {
-            # Account is expiring within the specified number of days
-            $expiringAccounts += $user
+    if ($passwordLastSetDate) {
+        if ($passwordLastSetDate -le $thresholdDate) {
+            # Password was last set 90 days ago or more
+            $accountsWithOldPasswords += $user
         }
     }
 }
 
-# Output expired accounts
-Write-Output "Expired Accounts:"
-$expiredAccounts | ForEach-Object {
-    Write-Output "Name: $($_.Name), Expiration Date: $($_.AccountExpirationDate)" | export-csv -path c:\temp\accntsexpired.csv
-}
-
-# Output expiring accounts
-Write-Output "Accounts Expiring within $daysToCheck days:"
-$expiringAccounts | ForEach-Object {
-    Write-Output "Name: $($_.Name), Expiration Date: $($_.AccountExpirationDate)" | export-csv -path c:\temp\accntsgoingtoexpire.csv
+# Output accounts with passwords last set 90 days ago or more
+if ($accountsWithOldPasswords.Count -gt 0) {
+    $accountsWithOldPasswords | Select-Object Name, PasswordLastSet,
+    @{Name="PasswordAgeInDays"; Expression={(New-TimeSpan -Start $_.PasswordLastSet -End $currentDate).Days}} | Export-Csv -Path "C:\temp\accountsWithOldPasswords.csv" -NoTypeInformation
+    Write-Output "Accounts with passwords last set 90 days ago or more have been exported to C:\temp\accountsWithOldPasswords.csv"
+} else {
+    Write-Output "No accounts with passwords last set 90 days ago or more found."
 }

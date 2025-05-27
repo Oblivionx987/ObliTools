@@ -39,12 +39,18 @@ Write-Output "---------------------------------------------" | Yellow
 #endregion
 
 # Debugging: Confirm script execution
-Write-Host "MultiScriptTester.ps1 is running..." | Green
+Write-Output "MultiScriptTester.ps1 is running..." | Green
 
 # Define the scripts to test in the desired order
 $scriptsToTest = @(
-    "C:\Users\Oblivion\OneDrive\Seth\Oblivion Vault\ObliTools\ObliTools-1\Diagnostic Tools\Script Testing\testing.ps1",   # Ensure these paths are correct
-    "C:\Users\Oblivion\OneDrive\Seth\Oblivion Vault\ObliTools\ObliTools-1\Diagnostic Tools\Script Testing\testing1.ps1"
+    "C:\Testing\Install 7-ZIP 32Bit.ps1",
+    "C:\Testing\Install 7-ZIP 64Bit.ps1",
+    "C:\testing\Adobe_Acrobat_DC_InstallOnly.ps1",
+    "C:\testing\Adobe_Acrobat_DC_AIO.ps1",
+    "C:\testing\Adobe_Acrobat_DC_UninstallOnly.ps1",
+    "C:\testing\Adobe_Acrobat_Reader_InstallOnly.ps1",
+    "C:\testing\Adobe_Acrobat_Reader_AIO.ps1",
+    "C:\testing\Adobe_Acrobat_Reader_UninstallOnly.ps1"
 )
 
 # Update the log file path to store it in C:\testing

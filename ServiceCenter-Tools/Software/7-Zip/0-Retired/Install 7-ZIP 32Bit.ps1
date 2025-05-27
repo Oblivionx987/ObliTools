@@ -1,6 +1,6 @@
 ## This script will Install 7-ZIP 32Bit
 
-Powershell
+## Powershell
 
 ## Variables
 $Destination = "C:\temp"

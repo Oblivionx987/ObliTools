@@ -1,6 +1,6 @@
 ## This script will Install 7-ZIP 64Bit
 
-Powershell
+## Powershell
 
 ## Functions
 function Red { process { Write-Host $_ -ForegroundColor Red }}
