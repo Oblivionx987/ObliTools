@@ -35,7 +35,7 @@ function Yellow     { process { Write-Host $_ -ForegroundColor Yellow }}
 function DarkRed    { process { Write-Host $_ -ForegroundColor DarkRed }}
 #endregion
 
-cls
+Clear-Host
 
 #region Online Check 
 ## START Built in Machine Online Check
@@ -53,7 +53,7 @@ if ($ping_test -match "True") {
 ## File server path
 $filePath = "\\sncorp\internal\Corp_Software\ServiceCenter_SNC_Software"
 ## Function to check if the file path is reachable
-function Check-FilePath {
+function CheckFilePath {
     param (
         [string]$file
     )
@@ -80,7 +80,8 @@ Write-Output "The file server was successfully reached." | Green
 Write-Output "--------------------"
 Write-Output "$Author" | Yellow
 Write-Output "$Script_Name"
-Write-Output ("$this_version") | Yellow
+Write-Output "$version , $last_tested" | Yellow
+Write-Output "$live , $bmgr"
 Write-Output "$Description" | Yellow
 Write-Output "--------------------"
 ## END Main Descriptor

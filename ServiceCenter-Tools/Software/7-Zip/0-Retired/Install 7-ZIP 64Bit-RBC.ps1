@@ -2,11 +2,26 @@
 ## NEEDS UPDATE
 Powershell
 
-## Functions
-function Red { process { Write-Host $_ -ForegroundColor Red }}
-function Green { process { Write-Host $_ -ForegroundColor Green }}
-function Yellow { process { Write-Host $_ -ForegroundColor Yellow }}
-function DarkRed { process { Write-Host $_ -ForegroundColor DarkRed }}
+#region Script Info
+$Script_Name = "Install 7-ZIP 64Bit-RBC.ps1"
+$Description = "This script will Install 7-ZIP 64Bit"
+$Author = "Seth Burns - System Administrator II - Service Center"
+$last_tested = "05-27-25"
+$version = "5.0.0"
+$live = "Live"
+$bmgr = "Live"
+#endregion
+
+#region Text Colors 
+function Red     { process { Write-Host $_ -ForegroundColor Red }}
+function Green   { process { Write-Host $_ -ForegroundColor Green }}
+function Yellow  { process { Write-Host $_ -ForegroundColor Yellow }}
+function Blue    { process { Write-Host $_ -ForegroundColor Blue }}
+function Cyan    { process { Write-Host $_ -ForegroundColor Cyan }}
+function Magenta { process { Write-Host $_ -ForegroundColor Magenta }}
+function White   { process { Write-Host $_ -ForegroundColor White }}
+function Gray    { process { Write-Host $_ -ForegroundColor Gray }}
+#endregion
 
 ## Variables
 $Source = "\\sncorp\internal\Corp_Software\ServiceCenter_SNC_Software\"
@@ -17,17 +32,17 @@ $MainUnInstaller = "7-Zip-64bit_uninstall.bat"
 $vpn_test = Test-NetConnection -ComputerName "sncorp.intranet.com"
 $ping_test = $vpn_test | Select-Object PingSucceeded -Wait
 
-## Author Info
-Write-Output ("Author Seth Burns - System Administrator II - Service Center
-Tested On : 01-08-2024
-This script will Install 7-ZIP 64Bit
-Associated Resource $File") | DarkRed
-
-## Description
-Write-Output ("Description
-This script will Uninstall 7-ZIP 64 Bit if it exists and then it will Install 7-Zip 64bit") | Green
-
-Read-Host "Please read the Description, then press ENTER to Continue"
+#region Main Descriptor
+## START Main Descriptor
+Write-Output "--------------------"
+Write-Output "$Author" | Yellow
+Write-Output "$Script_Name"
+Write-Output "$version , $last_tested" | Yellow
+Write-Output "$live , $bmgr"
+Write-Output "$Description" | Yellow
+Write-Output "--------------------"
+## END Main Descriptor
+#endregion
 
 ## Checking That Machine Is Online
 if ($ping_test -match "False") { Write-Output "Please Connect To Internet & VPN" | Red}
