@@ -5,7 +5,7 @@
 $Script_Name = "Adobe Reader DC All in One" | Yellow
 $Description = "Description: This script will uninstall Adobe Acrobat DC then install Adobe Acrobat DC Reader - Features are License based."
 $Author = "Author: Seth Burns - System Administrator II - Service Center"
-$this_version = "5.0.0"
+$version = "5.0.0"
 $live = "Live"
 $bmgr = "Live"
 #endregion

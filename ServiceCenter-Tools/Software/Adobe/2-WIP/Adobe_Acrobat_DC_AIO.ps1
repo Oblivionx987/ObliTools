@@ -1,14 +1,14 @@
 ## Powershell
 
 
-
-$Script_Name = "Adobe Acrobat DC Installer Only" | Yellow
-$Description = "Description: This script will install Adobe Acrobat DC - This contains standard and pro - Features are License based."
-$Author = "Author: Seth Burns - System Administrator II - Service Center"
+#region Script Info
+$Script_Name = "Adobe Acrobat DC All in One"
+$Description = "This script will uninstall Adobe Acrobat DC then install Adobe Acrobat DC- This contains standard and pro - Features are License based."
+$Author = "Seth Burns - System Administrator II - Service Center"
+$last_tested = "04-18-25"
 $version = "5.0.1"
-$last_tested = "05-24-25"
-$live = "Live"
-$bmgr = "Live"
+$live = "WIP"
+$bmgr = "WIP"
 #endregion
 
 #region Requirements
@@ -24,20 +24,11 @@ $ExpandedFileName = "Acrobat_DC_Std" ## Replace with name of expanded folder
 $ExpandedFilePath = Join-Path -Path $Destination -ChildPath $ExpandedFileName ## DO NOT CHANGE
 #endregion
 
-#region NOTES 
-##    Change Log: 1.0.0 - Initial version #>
-##
-#endregion
-
-#region Text Colors 
-function Red     { process { Write-Host $_ -ForegroundColor Red }}
-function Green   { process { Write-Host $_ -ForegroundColor Green }}
-function Yellow  { process { Write-Host $_ -ForegroundColor Yellow }}
-function Blue    { process { Write-Host $_ -ForegroundColor Blue }}
-function Cyan    { process { Write-Host $_ -ForegroundColor Cyan }}
-function Magenta { process { Write-Host $_ -ForegroundColor Magenta }}
-function White   { process { Write-Host $_ -ForegroundColor White }}
-function Gray    { process { Write-Host $_ -ForegroundColor Gray }}
+#region Built in Text Color Functions
+function Red        { process { Write-Host $_ -ForegroundColor Red }}
+function Green      { process { Write-Host $_ -ForegroundColor Green }}
+function Yellow     { process { Write-Host $_ -ForegroundColor Yellow }}
+function DarkRed    { process { Write-Host $_ -ForegroundColor DarkRed }}
 #endregion
 
 Clear-Host
@@ -82,13 +73,13 @@ Write-Output "The file server was successfully reached." | Green
 
 #region Main Descriptor
 ## START Main Descriptor
-Write-Output "---------------------------------------------" | Yellow
+Write-Output "--------------------"
 Write-Output "$Author" | Yellow
-Write-Output "$Script_Name" | Yellow
-Write-Output "Current Version - $version , Last Test - $last_tested" | Yellow
-Write-Output "Testing stage - $live , Bomgar stage - $bmgr" | Yellow
-Write-Output "Description - $Description" | Yellow
-Write-Output "---------------------------------------------" | Yellow
+Write-Output "$Script_Name"
+Write-Output "$version , $last_tested" | Yellow
+Write-Output "$live , $bmgr"
+Write-Output "$Description" | Yellow
+Write-Output "--------------------"
 ## END Main Descriptor
 #endregion
 
@@ -118,6 +109,14 @@ if (Test-Path -Path "$ExpandedFilePath" ) {
     Write-Output "Archive File expansion failed" | Red
 EXIT}
 ## END Archive File expansion and check
+#endregion
+
+#region Main Uninstall
+## START Main Function
+Write-Output "Begining Unstallation" | Yellow
+Start-Process "C:\temp\Acrobat_DC_Std\acrobat_DC_uninstall.bat" -wait
+Write-Output "Unstallation Completed" | Green
+## END Main Function
 #endregion
 
 #region Main Install
