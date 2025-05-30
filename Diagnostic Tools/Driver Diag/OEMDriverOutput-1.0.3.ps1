@@ -6,8 +6,8 @@ $Description = "This script will generate an HTML report of OEM drivers installe
 $Author = "Seth Burns - System Administrator II - Service Center"
 $last_tested = "05-23-25"
 $version = "1.0.3"
-$live = "WIP"
-$bmgr = "WIP"
+$live = "test"
+$bmgr = "test"
 #endregion
 
 #region Text Colors 

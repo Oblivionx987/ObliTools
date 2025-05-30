@@ -4,8 +4,8 @@ $Description = "This script will generate a disk usage report for the local mach
 $Author = "Seth Burns - System Administrator II - Service Center"
 $last_tested = "05-23-2025"
 $version = "1.0.0"
-$live = "WIP"
-$bmgr = "WIP"
+$live = "Test"
+$bmgr = "Test"
 #endregion
 
 #region Text Colors 

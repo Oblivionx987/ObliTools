@@ -14,12 +14,28 @@ $bmgr = "Live"
 $description = "This script will Install 7-ZIP 32Bit"
 
 
+#region Text Colors 
+function Red     { process { Write-Host $_ -ForegroundColor Red }}
+function Green   { process { Write-Host $_ -ForegroundColor Green }}
+function Yellow  { process { Write-Host $_ -ForegroundColor Yellow }}
+function Blue    { process { Write-Host $_ -ForegroundColor Blue }}
+function Cyan    { process { Write-Host $_ -ForegroundColor Cyan }}
+function Magenta { process { Write-Host $_ -ForegroundColor Magenta }}
+function White   { process { Write-Host $_ -ForegroundColor White }}
+function Gray    { process { Write-Host $_ -ForegroundColor Gray }}
+#endregion
 
-
-
-## Functions
-function Red { process { Write-Host $_ -ForegroundColor Red }}
-function Green { process { Write-Host $_ -ForegroundColor Green }}
+#region Main Descriptor
+## START Main Descriptor
+Write-Output "--------------------"
+Write-Output "$Author" | Yellow
+Write-Output "$Script_Name"
+Write-Output "$version , $last_tested" | Yellow
+Write-Output "$live , $bmgr"
+Write-Output "$Description" | Yellow
+Write-Output "--------------------"
+## END Main Descriptor
+#endregion
 
 ## Checking That Machine Is Online
 if ($ping_test -match "False") { Write-Output "Please Connect To Internet & VPN" | Red}

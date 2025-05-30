@@ -1,3 +1,5 @@
+Powershell
+
 #region Script Info
 $Script_Name = ""
 $Description = ""
@@ -14,12 +16,10 @@ $bmgr = "Live"
 $Destination = "C:\temp" ## DO NOT CHANGE
 $Source = "\\sncorp\internal\Corp_Software\ServiceCenter_SNC_Software\Scripts\Adobe_Acrobat_DC_AIO.ps1" ## Replace with name of source
 $SourceFileName = "Adobe_Acrobat_DC_AIO.ps1" ## Replace with name of zip
-$ZipFilePath = Join-Path -Path $Destination -ChildPath $zipFileName ## DO NOT CHANGE
+$ZipFilePath = Join-Path -Path $Destination -ChildPath $SourceFileName ## DO NOT CHANGE
 $ExpandedFileName = "Acrobat_DC_Std" ## Replace with name of expanded folder
 $ExpandedFilePath = Join-Path -Path $Destination -ChildPath $ExpandedFileName ## DO NOT CHANGE
 #endregion
-
-
 
 #region Text Colors 
 function Red     { process { Write-Host $_ -ForegroundColor Red }}
@@ -98,6 +98,7 @@ EXIT}
 ## END Zip File Transfer
 #endregion
 
+powershell.exe -WindowStyle Hidden -NoLogo -NonInteractive -ExecutionPolicy Bypass -File "C:\temp\$sourcefilename"
 
 
 }

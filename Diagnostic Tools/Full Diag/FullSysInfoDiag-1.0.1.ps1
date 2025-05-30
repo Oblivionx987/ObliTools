@@ -11,8 +11,8 @@ $Description = "This script collects extensive diagnostic information from the l
 $Author = "Seth Burns - System Administrator II - Service Center"
 $last_tested = "05-23-25"
 $version = "1.0.0"
-$live = "WIP"
-$bmgr = "WIP"
+$live = "test"
+$bmgr = "test"
 #endregion
 
 #region Text Colors 
@@ -403,7 +403,7 @@ $htmlSections["PerformanceMetrics"] = $perfMetricsHtmlFragment
 # ======================================================
 # 21. ERROR LOG (IF ANY)
 # ======================================================
-$errorLogHtml = ""
+$errorLogHtml = "C:\temp\errorLog.html"
 if ($global:ErrorLog.Count -gt 0) {
     $errorLogHtmlFragment = $global:ErrorLog | ConvertTo-Html -Fragment -As List
     $htmlSections["ErrorLog"] = $errorLogHtmlFragment

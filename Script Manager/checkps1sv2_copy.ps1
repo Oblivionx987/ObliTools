@@ -6,7 +6,7 @@ $Version = "1.0.2"
 
 
 # Hardcode the directory path
-$directory = "C:\Users\Oblivion\OneDrive\Seth\Oblivion Vault\ObliTools"
+$directory = "C:\Users\114825\OneDrive - Sierra Nevada Corporation\ObliTools"
 
 # Hardcode the output directory
 $outputDir = "C:\temp"
@@ -199,7 +199,7 @@ $htmlContent += "</body></html>"
 $htmlContent | Out-File -FilePath $outputFile -Encoding UTF8
 
 # Log the completion of the script
-Log-Message "Script execution completed. Report saved to $outputFile."
+LogMessage "Script execution completed. Report saved to $outputFile."
 
 Write-Output "Summary has been saved to $outputFile"
 Start-Process "$outputFile"
