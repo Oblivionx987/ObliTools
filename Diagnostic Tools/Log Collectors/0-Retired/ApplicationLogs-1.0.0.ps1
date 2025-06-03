@@ -74,7 +74,7 @@ if ($eventLogs.Count -eq 0) {
 # Export the event logs to a usable .evtx file
 try {
     # Create a temporary log name for export
-    $tempLogName = "TempApplicationLog"
+    $tempLogName = "TempApplicationLog.txt"
 
     # Check if the temporary log already exists and remove it
     if (Get-EventLog -LogName $tempLogName -ErrorAction SilentlyContinue) {

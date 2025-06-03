@@ -1,11 +1,11 @@
 #region Script Info
 $Script_Name = "Check Credential Guard & Logs"
-$Description = "Checks for Credential Guard and related LSA events on Windows 10/11. It exports the results to CSV files in a specified output directory."
+$Description = "Checks for Credential Guard and related LSA events on Windows 10/11. It exports the results to CSV files in temp directory"
 $Author = "Seth Burns - System Administrator II - Service Center"
 $last_tested = "05-23-25"
 $version = "1.0.1"
-$live = "Live"
-$bmgr = "Live"
+$live = "Test"
+$bmgr = "Test"
 #endregion
 
 #region Text Colors 
@@ -31,51 +31,44 @@ Write-Output "---------------------------------------------" | Yellow
 ## END Main Descriptor
 #endregion
 
-
-
-
-
 # Verbose Credential Guard Troubleshooter
 
 # Enable verbose output
 $VerbosePreference = "Continue"
 
-Write-Verbose "Starting Credential Guard Troubleshooter..."
+Write-Output "Starting Credential Guard Troubleshooter..." | Blue
 
 # Check if Credential Guard is enabled
-Write-Verbose "Checking if Credential Guard is enabled..."
+Write-Output "Checking if Credential Guard is enabled..." | Cyan
 $cgStatus = Get-CimInstance -Namespace "Root\Microsoft\Windows\DeviceGuard" -ClassName "Win32_DeviceGuard" | Select-Object -ExpandProperty SecurityServicesConfigured
 
 if ($cgStatus -contains 1) {
-    Write-Verbose "Credential Guard is enabled."
+    Write-Output "Credential Guard is enabled." | Green
 } else {
-    Write-Verbose "Credential Guard is not enabled."
-    Write-Output "Credential Guard is not enabled on this system."
+    Write-Output "Credential Guard is not enabled." | Red
     return
 }
 
 # Check for errors in the Event Log
-Write-Verbose "Checking for errors in the Event Log..."
+Write-Output "Checking for errors in the Event Log..." | Cyan
 $eventLogs = Get-WinEvent -LogName "Microsoft-Windows-DeviceGuard/Operational" -ErrorAction SilentlyContinue
 
 if ($eventLogs) {
     $errorEvents = $eventLogs | Where-Object { $_.LevelDisplayName -eq "Error" }
 
     if ($errorEvents) {
-        Write-Verbose "Errors found in the Event Log. Exporting logs..."
+        Write-Output "Errors found in the Event Log. Exporting logs..." | Red
 
         # Export the logs to a file
-        $exportPath = "$env:USERPROFILE\Desktop\CredentialGuardErrors.evtx"
+        $exportPath = "C:\temp\CredentialGuardErrors.evtx"
         $errorEvents | Export-Clixml -Path $exportPath
 
         Write-Output "Errors found in the Event Log. Logs have been exported to: $exportPath"
     } else {
-        Write-Verbose "No errors found in the Event Log."
-        Write-Output "No errors found in the Event Log."
+        Write-Output "No errors found in the Event Log." | Green
     }
 } else {
-    Write-Verbose "No logs found in the Event Log."
-    Write-Output "No logs found in the Event Log."
+    Write-Output "No logs found in the Event Log." | Red
 }
 
-Write-Verbose "Credential Guard Troubleshooter completed."
+Write-Output "Credential Guard Troubleshooter completed." | Blue
