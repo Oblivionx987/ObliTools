@@ -58,7 +58,7 @@ if ($ping_test -match "True") {
 ## File server path
 $filePath = "\\sncorp\internal\Corp_Software\ServiceCenter_SNC_Software"
 ## Function to check if the file path is reachable
-function Check-FilePath {
+function CheckFilePath {
     param (
         [string]$file
     )
@@ -73,7 +73,7 @@ function Check-FilePath {
     }
 }
 ## Loop until the file path is reachable
-while (-not (Check-FilePath -file $filePath)) {
+while (-not (CheckFilePath -file $filePath)) {
     Start-Sleep -Seconds 10
 }
 Write-Output "The file server was successfully reached." | Green
