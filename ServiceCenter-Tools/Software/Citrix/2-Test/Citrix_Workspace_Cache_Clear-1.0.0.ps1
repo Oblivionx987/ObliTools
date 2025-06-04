@@ -1,15 +1,14 @@
-powershell.exe
+Powershell
 
 #region Script Info
-$Script_Name = "Install AnyConnect 4.10.ps1"
-$Description = "This script will uninstall 4.9 Cisco any connect and install 4.10"
+$Script_Name = "Citrix_Workspace_Cache_Clear-1.0.0.ps1"
+$Description = "This script will Clear Citrix Workspace Cache"
 $Author = "Seth Burns - System Administrator II - Service Center"
 $last_tested = "05-27-25"
-$version = "4.10.03104"
-$live = "Retired"
-$bmgr = "Retired"
+$version = "1.0.0"
+$live = "Test"
+$bmgr = "Test"
 #endregion
-
 
 #region Text Colors 
 function Red     { process { Write-Host $_ -ForegroundColor Red }}
@@ -35,16 +34,19 @@ Write-Output "--------------------" | Yellow
 ## END Main Descriptor
 #endregion
 
+Write-Output "Stopping Running Services" | Cyan
+taskkill /im selfserviceplugin* /f
+taskkill /im selfservice* /F
+Write-Output "Done stopping serives" | Green
 
-## This script will uninstall 4.9 Cisco any connect and install 4.10
-Expand-archive %RESOURCE_FILE% c:\Temp -Force
+## Main Cleanup Call
+Write-Output "Starting Cache Clear" | Cyan
+Start-Process -FilePath "C:\Program Files (x86)\Citrix\ICA Client\SelfServicePlugin\CleanUp.exe" -ArgumentList "-cleanUser -silent" -Wait
+Write-Output "Finished Cache Clear" | Green
 
-## Expanded archive uninstall path
-Start-Process "c:\temp\Cisco_AnyConnect_4.10.03104\Cisco_AnyConnect_4.10.03104_uninstall_silent.bat" -wait
-
-## Expanded archive install path
-Start-Process "c:\temp\Cisco_AnyConnect_4.10.03104\Cisco_AnyConnect_4.10.03104_install_silent.bat" -wait
+#Start Citrix Workspace
+Write-Output "Starting Citrix Workspace" | Cyan
+Start-Process "C:\Program Files (x86)\Citrix\ICA Client\SelfServicePlugin\SelfService.exe"
+Write-Output "Finished Starting Citrix Workspace" | Green
 
 EXIT
-
-## Associated resource file "Cisco_AnyConnect_4.10.03104.zip"

@@ -1,6 +1,6 @@
 $author = "Seth Burns - System Administrator II - Service Center"
 $description = "This script will check a supplied directory and check all powershell scripts for summary info."
-$live = "Test"
+$live = "Restricted"
 $bmgr = "Restricted"
 $Version = "1.0.2"
 
@@ -71,7 +71,7 @@ foreach ($file in $ps1Files) {
     $live = "No live status found."
     $bmgr = "No Bomgar status found."
     $last_tested = "No last tested date found."
-    $Source = "No source found."
+    $source = "No source found."
     $zipFileName = "No zip file name found."
 
     # Ensure $source and $zipFileName are extracted correctly

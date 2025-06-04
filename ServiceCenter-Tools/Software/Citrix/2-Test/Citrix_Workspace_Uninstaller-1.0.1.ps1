@@ -1,16 +1,20 @@
-## This Script will install rsa secure id
-
 Powershell
 
 #region Script Info
-$Script_Name = ""
-$Description = "This Script will install rsa secure id"
+$Script_Name = "Citrix_Workspace_Uninstaller-1.0.1.ps1"
+$Description = "This script will Uninstall Citrix workspace"
 $Author = "Seth Burns - System Administrator II - Service Center"
 $last_tested = "05-27-25"
-$version = "2.0.0 - 5.0.2.440"
-$live = "WIP"
-$bmgr = "WIP"
+$version = "1.0.1 - 22.3.2000.2105"
+$live = "Test"
+$bmgr = "Test"
 #endregion
+
+## Variables
+$Destination = "C:\temp"
+$Source = "\\sncorp\internal\Corp_Software\ServiceCenter_SNC_Software\Citrix_Workspace_22.3.2000.2105.zip"
+$vpn_test = Test-NetConnection -ComputerName "sncorp.intranet.com"
+$ping_test = $vpn_test | Select-Object PingSucceeded -Wait
 
 #region Text Colors 
 function Red     { process { Write-Host $_ -ForegroundColor Red }}
@@ -23,6 +27,7 @@ function White   { process { Write-Host $_ -ForegroundColor White }}
 function Gray    { process { Write-Host $_ -ForegroundColor Gray }}
 #endregion
 
+Clear-Host
 
 #region Main Descriptor
 ## START Main Descriptor
@@ -36,63 +41,39 @@ Write-Output "--------------------" | Yellow
 ## END Main Descriptor
 #endregion
 
-## Variables
-$Destination = "C:\temp"
-$Source = "\\sncorp\internal\Corp_Software\ServiceCenter_SNC_Software\RSA_SecurID_Software_Token.zip"
-$vpn_test = Test-NetConnection -ComputerName "sncorp.intranet.com"
-$ping_test = $vpn_test | Select-Object PingSucceeded -Wait
-
-
 ## Checking That Machine Is Online
+Write-Output ("Checking that device can connect to file Server") | Green
 if ($ping_test -match "False") { Write-Output "Please Connect To Internet & VPN" | Red}
 if ($ping_test -match "False") { EXIT }
 if ($ping_test -match "True") { Write-Output "Computer Is Connected To Network" | Green}
 if ($ping_test -match "True") {
 	
-#region File Server Check
-## START Built in file server connection check
-## File server path
-$filePath = "\\sncorp\internal\Corp_Software\ServiceCenter_SNC_Software"
-## Function to check if the file path is reachable
-function CheckFilePath {
-    param (
-        [string]$file
-    )
-    
-    if (Test-Path -Path $file) {
-        Write-Output "The file path '$file' is reachable."
-        return $true
-    } else {
-        Write-Output "The file server is not reachable. Trying again in 10 seconds...
-        If issue persists, check connectivity" | Red
-        return $false
-    }
-}
-## Loop until the file path is reachable
-while (-not (CheckFilePath -file $filePath)) {
-    Start-Sleep -Seconds 10
-}
-Write-Output "The file server was successfully reached." | Green
-## END Built in file server connection check
-#endregion
-
 ## Starting File Transfer
+Write-Output ("Starting File Transfer") | Green
 $FOF_CREATEPROGRESSDLG = "&H0&"
 $objShell = New-Object -ComObject "Shell.Application"
 $objFolder = $objShell.NameSpace($Destination) 
 $objFolder.CopyHere($Source, $FOF_CREATEPROGRESSDLG)
+Write-Output ("Finished File Transfer") | Green
 ## Finished File Transfer
 
 ## Expanding Archive File
-Expand-Archive "C:\temp\RSA_SecurID_Software_Token.zip" -Destination "C:\temp" -Force
+Write-Output ("Starting Archive Expansion") | Green
+Expand-Archive "C:\temp\Citrix_Workspace_22.3.2000.2105.zip" -Destination "C:\temp" -force
+Write-Output ("Finished Archive Expansion") | Green
 ## Archive Expansion Completed
 
 ## Starting Installation
-Start-Process "c:\temp\RSA_SecurID_Software_Token\5.0.2.440\Deploy-Application.exe" -wait
-## Installation Started
+Write-Output ("Starting Installation") | Green
+Start-Process "C:\temp\Citrix_Workspace_22.3.2000.2105\Citrix_Workspaces_22.3.2000.2105_uninstall.bat" -wait
+Write-Output ("Finished Installation") | Green
+## Finished Installation
+
+## Starting Installation
+Write-Output ("Starting Installation") | Green
+Start-Process "C:\temp\Citrix_Workspace_22.3.2000.2105\Citrix_Workspaces_22.3.2000.2105_install.bat" -wait
+Write-Output ("Finished Installation") | Green
+## Finished Installation
+
 
 EXIT}
-
-## Associated resource file "RSA_SecurID_Software_Token.zip"
-## Author = Seth Burns & Frank Coates
-## Script Last Test Date - 2/9/2023 - Working

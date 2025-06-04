@@ -1,6 +1,14 @@
-## This script will Remove Citrix Reciever & Workspace and Install Citrix workspace
-
 Powershell
+
+#region Script Info
+$Script_Name = "Citrix_Workspace_Installer-1.0.1.ps1"
+$Description = "This script will Install Citrix workspace"
+$Author = "Seth Burns - System Administrator II - Service Center"
+$last_tested = "05-27-25"
+$version = "1.0.1 - 22.3.2000.2105"
+$live = "Test"
+$bmgr = "Test"
+#endregion
 
 ## Variables
 $Destination = "C:\temp"
@@ -8,35 +16,30 @@ $Source = "\\sncorp\internal\Corp_Software\ServiceCenter_SNC_Software\Citrix_Wor
 $vpn_test = Test-NetConnection -ComputerName "sncorp.intranet.com"
 $ping_test = $vpn_test | Select-Object PingSucceeded -Wait
 
-$description = "This script will Remove Citrix Reciever & Workspace and Install Citrix workspace"
-$live = "Live"
-$bmgr = "Live"
-$author = "Seth Burns - System Administarator II - Service Center"
-$version = "22.3.2000.2105"
+#region Text Colors 
+function Red     { process { Write-Host $_ -ForegroundColor Red }}
+function Green   { process { Write-Host $_ -ForegroundColor Green }}
+function Yellow  { process { Write-Host $_ -ForegroundColor Yellow }}
+function Blue    { process { Write-Host $_ -ForegroundColor Blue }}
+function Cyan    { process { Write-Host $_ -ForegroundColor Cyan }}
+function Magenta { process { Write-Host $_ -ForegroundColor Magenta }}
+function White   { process { Write-Host $_ -ForegroundColor White }}
+function Gray    { process { Write-Host $_ -ForegroundColor Gray }}
+#endregion
 
+Clear-Host
 
-
-
-
-## Functions
-function Red { process { Write-Host $_ -ForegroundColor Red }}
-function Green { process { Write-Host $_ -ForegroundColor Green }}
-function Yellow { process { Write-Host $_ -ForegroundColor Yellow }}
-function DarkRed { process { Write-Host $_ -ForegroundColor DarkRed }}
-
-## Author Info
-Write-Output ("Author :Seth Burns - System Administrator II - Service Center
-Tested On : 02/05/2025
-Associated Resource:
-$Source
-Associated Destination:
-$Destination ") | DarkRed
-
-## Description
-Write-Output ("Description:
-This script will Uninstall Citrix Reciever & Workspace if it exists then it will Install Citrix Workspace") | Green
-
-read-host "Please read the description, then press ENTER to Continue"
+#region Main Descriptor
+## START Main Descriptor
+Write-Output "--------------------" | Yellow
+Write-Output "$Author" | Yellow
+Write-Output "$Script_Name" | Yellow
+Write-Output "$version , $last_tested" | Yellow
+Write-Output "$live , $bmgr" | Yellow
+Write-Output "$Description" | Yellow
+Write-Output "--------------------" | Yellow
+## END Main Descriptor
+#endregion
 
 ## Checking That Machine Is Online
 Write-Output ("Checking that device can connect to file Server") | Green
@@ -59,13 +62,6 @@ Write-Output ("Starting Archive Expansion") | Green
 Expand-Archive "C:\temp\Citrix_Workspace_22.3.2000.2105.zip" -Destination "C:\temp" -force
 Write-Output ("Finished Archive Expansion") | Green
 ## Archive Expansion Completed
-
-## Starting Uninstallation
-Write-Output ("Starting Uninstallation") | Green
-Start-Process "C:\temp\Citrix_Workspace_22.3.2000.2105\Files\ReceiverCleanupUtility.exe" -wait
-Start-Process "C:\temp\Citrix_Workspace_22.3.2000.2105\Citrix_Workspaces_22.3.2000.2105_uninstall.bat" -wait
-Write-Output ("Finished Uninstallation") | Green
-## Finished Uninstallation
 
 ## Starting Installation
 Write-Output ("Starting Installation") | Green
