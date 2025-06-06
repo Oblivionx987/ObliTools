@@ -1,9 +1,39 @@
 
-$author = "Seth Burns - System Administrator II - Service Center"
-$description = "This script will check a supplied directory and check all powershell scripts for summary info."
-$live = "Test"
-$bmgr = "Restricted"
-$Version = "1.0.2"
+
+#region Script Info
+$Script_Name = "checkps1s-1.0.0.ps1"
+$Description = "This script will check a supplied directory and check all powershell scripts for summary info."
+$Author = "Seth Burns - System Administrator II - Service Center"
+$last_tested = "05-27-25"
+$version = "1.0.0"
+$live = "Retired"
+$bmgr = "Retired"
+#endregion
+
+#region Text Colors 
+function Red     { process { Write-Host $_ -ForegroundColor Red }}
+function Green   { process { Write-Host $_ -ForegroundColor Green }}
+function Yellow  { process { Write-Host $_ -ForegroundColor Yellow }}
+function Blue    { process { Write-Host $_ -ForegroundColor Blue }}
+function Cyan    { process { Write-Host $_ -ForegroundColor Cyan }}
+function Magenta { process { Write-Host $_ -ForegroundColor Magenta }}
+function White   { process { Write-Host $_ -ForegroundColor White }}
+function Gray    { process { Write-Host $_ -ForegroundColor Gray }}
+#endregion
+
+
+#region Main Descriptor
+## START Main Descriptor
+Write-Output "--------------------"
+Write-Output "$Author" | Yellow
+Write-Output "$Script_Name"
+Write-Output "$version , $last_tested" | Yellow
+Write-Output "$live , $bmgr"
+Write-Output "$Description" | Yellow
+Write-Output "--------------------"
+## END Main Descriptor
+#endregion
+
 
 
 # Define the directory to search
@@ -30,7 +60,7 @@ $htmlContent = @()
 # Add HTML header
 $htmlContent += "<html><head><title>PowerShell Script Summary</title></head><body>"
 $htmlContent += "<h1>Summary of .ps1 files in the directory $directory and its subdirectories:</h1>"
-$htmlContent += "<table border='1'><tr><th>Live</th><th>BMGR</th><th>Folder Name</th><th>File Name</th><th>Version</th><th>Author</th><th>Description</th><th>Path</th></tr>"
+$htmlContent += "<table border='1'><tr><th>Live</th><th>Folder Name</th><th>File Name</th><th>Version</th><th>Author</th><th>Description</th><th>Path</th></tr>"
 
 foreach ($file in $ps1Files) {
     # Read the content of the file
@@ -41,7 +71,6 @@ foreach ($file in $ps1Files) {
     $author = "No author found."
     $version = "No version found."
     $live = "No live status found."
-    $bmgr = "No Bomgar status found."
 
     # Check for the variables in the file content
     foreach ($line in $fileContent) {
@@ -57,29 +86,6 @@ foreach ($file in $ps1Files) {
         if ($line -match '^\s*\$live\s*=\s*"(.*)"') {
             $live = $matches[1]
         }
-        if ($line -match '^\s*\$bmgr\s*=\s*"(.*)"') {
-            $bmgr = $matches[1]
-        }
-    }
-
-    # Determine color based on live value
-    switch ($live) {
-        "Test" { $livecolor = "orange" }
-        "Live" { $livecolor = "green" }
-        "WIP" { $livecolor = "moccasin" }
-        "Retired" { $livecolor = "salmon" }
-        "Restricted" { $livecolor = "darkred" }
-        default { $livecolor = "lightgray" }
-    }
-
-    # Determine color based on bmgr value
-    switch ($bmgr) {
-        "Test" { $bmgrcolor = "orange" }
-        "Live" { $bmgrcolor = "green" }
-        "WIP" { $bmgrcolor = "moccasin" }
-        "Retired" { $bmgrcolor = "salmon" }
-        "Restricted" { $bmgrcolor = "darkred" }
-        default { $bmgrcolor = "lightgray" }
     }
 
     # Get the folder name
@@ -87,8 +93,7 @@ foreach ($file in $ps1Files) {
 
     # Add file information to HTML content
     $htmlContent += "<tr>"
-    $htmlContent += "<td style='background-color:$livecolor;'>$live</td>"
-    $htmlContent += "<td style='background-color:$bmgrcolor;'>$bmgr</td>"
+    $htmlContent += "<td>$live</td>"
     $htmlContent += "<td>$folderName</td>"
     $htmlContent += "<td>$($file.Name)</td>"
     $htmlContent += "<td>$version</td>"
@@ -113,4 +118,4 @@ if (-Not (Test-Path -Path "C:\temp")) {
 $htmlContent | Out-File -FilePath $outputFile -Encoding UTF8
 
 Write-Host "Summary has been saved to $outputFile"
-Start-Process "$outputFile"
+Start-Process "$outputfile"

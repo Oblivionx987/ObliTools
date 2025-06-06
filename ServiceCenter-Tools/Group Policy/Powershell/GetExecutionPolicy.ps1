@@ -1,3 +1,0 @@
-Powershell
-
-Get-ExecutionPolicy -List

@@ -1,11 +1,11 @@
-powershell
+Powershell
 
 #region Script Info
-$Script_Name = "WUAlog.ps1"
-$Description = "Opens the WuaLog in ccm cmtrace tool"
+$Script_Name = "DisableRunAsOtherService-1.0.0.ps1"
+$Description = "This script will disable the Service Seconday Login which affects a users ability to run as other user"
 $Author = "Seth Burns - System Administrator II - Service Center"
 $last_tested = "05-27-25"
-$version = "1.0.0"
+$version = "5.0.0"
 $live = "Live"
 $bmgr = "Live"
 #endregion
@@ -21,6 +21,7 @@ function White   { process { Write-Host $_ -ForegroundColor White }}
 function Gray    { process { Write-Host $_ -ForegroundColor Gray }}
 #endregion
 
+
 #region Main Descriptor
 ## START Main Descriptor
 Write-Output "--------------------" | Yellow
@@ -33,14 +34,22 @@ Write-Output "--------------------" | Yellow
 ## END Main Descriptor
 #endregion
 
-$WUALog = "C:\Windows\CCM\Logs\WUAHandler.log"
-$CMTrace = "C:\Windows\CCM\CMTrace.exe"
+# Get the service object for "Secondary Logon"
+$service = Get-Service -Name "seclogon"
 
-Write-Output "Openining WUA Log in CMTrace tool"
-Start-Process $CMTrace $WUALog
-
-Write-Output "Script Complete - Exiting"
-Exit
-
+# Check if the service exists
+if ($service -ne $null) {
+    # Change the startup type to "Automatic"
+    Set-Service -Name "seclogon" -StartupType Disabled
+    
+    # Start the service if it is not already running
+    if ($service.Status -ne 'Running') {
+        Start-Service -Name "seclogon"
+    }
+    
+    Write-Output "The 'Secondary Logon' service has been Disabled" | Green
+} else {
+    Write-Output "The 'Secondary Logon' service was not found on this system." | Red
+}
 
 

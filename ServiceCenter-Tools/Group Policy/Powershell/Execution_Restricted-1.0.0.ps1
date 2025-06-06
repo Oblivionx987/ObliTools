@@ -1,8 +1,8 @@
 powershell
 
 #region Script Info
-$Script_Name = "WUAlog.ps1"
-$Description = "Opens the WuaLog in ccm cmtrace tool"
+$Script_Name = "Execution_Restricted-1.0.0.ps1"
+$Description = "Sets the powershell execution for scripts to Restricted."
 $Author = "Seth Burns - System Administrator II - Service Center"
 $last_tested = "05-27-25"
 $version = "1.0.0"
@@ -33,14 +33,4 @@ Write-Output "--------------------" | Yellow
 ## END Main Descriptor
 #endregion
 
-$WUALog = "C:\Windows\CCM\Logs\WUAHandler.log"
-$CMTrace = "C:\Windows\CCM\CMTrace.exe"
-
-Write-Output "Openining WUA Log in CMTrace tool"
-Start-Process $CMTrace $WUALog
-
-Write-Output "Script Complete - Exiting"
-Exit
-
-
-
+Set-ExecutionPolicy -ExecutionPolicy Restricted -Scope LocalMachine -Force

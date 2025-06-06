@@ -1,4 +1,4 @@
-powershell
+##powershell
 
 function Get-Timestamp {
     [CmdletBinding()]

@@ -1,25 +1,38 @@
+powershell 
 
+#region Script Info
+$Script_Name = "CheckCredentialGuard-1.0.1.ps1"
+$Description = "Checks for Credential Guard and related LSA events on Windows 10/11."
+$Author = "Seth Burns - System Administrator II - Service Center"
+$last_tested = "05-27-25"
+$version = "1.0.1"
 $live = "WIP"
 $bmgr = "WIP"
-$Author = "Seth Burns - System Administarator II - Service Center"
-$description = "Script for checking and testing Credential guard"
-$version = "1.0.1"
+#endregion
 
+#region Text Colors 
+function Red     { process { Write-Host $_ -ForegroundColor Red }}
+function Green   { process { Write-Host $_ -ForegroundColor Green }}
+function Yellow  { process { Write-Host $_ -ForegroundColor Yellow }}
+function Blue    { process { Write-Host $_ -ForegroundColor Blue }}
+function Cyan    { process { Write-Host $_ -ForegroundColor Cyan }}
+function Magenta { process { Write-Host $_ -ForegroundColor Magenta }}
+function White   { process { Write-Host $_ -ForegroundColor White }}
+function Gray    { process { Write-Host $_ -ForegroundColor Gray }}
+#endregion
 
-<# 
-.SYNOPSIS
-    Checks for Credential Guard and related LSA events on Windows 10/11.
-.DESCRIPTION
-    This script:
-      1. Creates C:\temp if it doesn't exist.
-      2. Searches the System log for messages containing "Credential Guard" or "LSA".
-      3. Retrieves events from the Microsoft-Windows-DeviceGuard/Operational log.
-      4. Exports both sets of events to CSV in C:\temp.
-.PARAMETER None
-    This script does not accept parameters.
-.EXAMPLE
-    .\Check-CredentialGuardLogs.ps1 -Verbose
-#>
+#region Main Descriptor
+## START Main Descriptor
+Write-Output "--------------------" | Yellow
+Write-Output "$Author" | Yellow
+Write-Output "$Script_Name" | Yellow
+Write-Output "$version , $last_tested" | Yellow
+Write-Output "$live , $bmgr" | Yellow
+Write-Output "$Description" | Yellow
+Write-Output "--------------------" | Yellow
+## END Main Descriptor
+#endregion
+
 
 [CmdletBinding()]
 param()
