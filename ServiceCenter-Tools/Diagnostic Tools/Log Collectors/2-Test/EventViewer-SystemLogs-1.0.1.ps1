@@ -7,8 +7,8 @@ $Description = "Exports system logs to c:\temp"
 $Author = "Seth Burns - System Administrator II - Service Center"
 $last_tested = "05-27-25"
 $version = "1.0.1"
-$live = "Test"
-$bmgr = "Test"
+$live = "Live"
+$bmgr = "Live"
 #endregion
 
 #region Text Colors 
