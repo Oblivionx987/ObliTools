@@ -21,15 +21,16 @@ function Gray    { process { Write-Host $_ -ForegroundColor Gray }}
 
 #region Main Descriptor
 ## START Main Descriptor
-Write-Output "---------------------------------------------" | Yellow
+Write-Output "--------------------" | Yellow
 Write-Output "$Author" | Yellow
 Write-Output "$Script_Name" | Yellow
-Write-Output "Current Version - $version , Last Test - $last_tested" | Yellow
-Write-Output "Testing stage - $live , Bomgar stage - $bmgr" | Yellow
-Write-Output "Description - $Description" | Yellow
-Write-Output "---------------------------------------------" | Yellow
+Write-Output "$version , $last_tested" | Yellow
+Write-Output "$live , $bmgr" | Yellow
+Write-Output "$Description" | Yellow
+Write-Output "--------------------" | Yellow
 ## END Main Descriptor
 #endregion
+
 
 
 # Ensure the output directory exists

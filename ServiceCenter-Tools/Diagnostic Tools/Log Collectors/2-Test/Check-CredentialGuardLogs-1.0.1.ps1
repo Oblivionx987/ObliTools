@@ -1,3 +1,5 @@
+Powershell
+
 #region Script Info
 $Script_Name = "Check Credential Guard & Logs"
 $Description = "Checks for Credential Guard and related LSA events on Windows 10/11. It exports the results to CSV files in temp directory"
