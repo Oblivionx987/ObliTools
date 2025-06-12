@@ -1,14 +1,15 @@
 
+
 Powershell
 
 #region Script Info
-$Script_Name = "Visio 2016 pro 32Bit.ps1"
-$Description = "This script will install Visio 2016 pro 32Bit"
+$Script_Name = "TortoiseSVN_Installer.ps1"
+$Description = "This script will install Tortoise SVN"
 $Author = "Seth Burns - System Administrator II - Service Center"
 $last_tested = "05-27-25"
 $version = "1.0.0"
-$live = "Retired"
-$bmgr = "Retired"
+$live = "Live"
+$bmgr = "Live"
 #endregion
 
 #region Text Colors 
@@ -37,7 +38,7 @@ Write-Output "--------------------" | Yellow
 
 ## Variables
 $Destination = "C:\temp"
-$Source = "\\sncorp\internal\Corp_Software\ServiceCenter_SNC_Software\Visio2016_Professional_32bit.zip"
+$Source = "\\sncorp\internal\Corp_Software\ServiceCenter_SNC_Software\TortoiseSVN_1.9.4.zip"
 $vpn_test = Test-NetConnection -ComputerName "sncorp.intranet.com"
 $ping_test = $vpn_test | Select-Object PingSucceeded -Wait
 
@@ -55,19 +56,17 @@ $objFolder.CopyHere($Source, $FOF_CREATEPROGRESSDLG)
 ## Finished File Transfer
 
 ## Expanding Archive File
-Expand-Archive "C:\temp\Visio2016_Professional_32bit.zip" -Destination "C:\temp" -force
+Expand-Archive "C:\temp\TortoiseSVN_1.9.4.zip" -Destination "C:\temp" -force
 ## Archive Expansion Completed
 
-## Starting Uninstallation
-Start-Process "C:\temp\Visio2016_Professional_32bit\visio_2016_professional_32bit_uninstall.bat" -wait
-## Uninstall Completed
-
-## Starting Installation
-Start-Process "C:\temp\Visio2016_Professional_32bit\visio_2016_professional_32bit_install.bat" -wait
-## Installation Completed
+## Starting Software Installation
+Start-Process "C:\temp\TortoiseSVN_1.9.4\64bit\TortoiseSVN-64bit_install.bat" -wait
+## Software Installation Completed
 
 EXIT}
 
-## Associated resource file "Visio2016_Professional_32bit.zip"
-## Author = Seth Burns & Frank Coates
-## Last Tested on - 02-21-2023 - Working
+## Associated resource file "TortoiseSVN_1.9.4.zip"
+## Author = Seth Burns
+## Last Tested on - 08-02-2024 - Working
+
+

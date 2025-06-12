@@ -1,14 +1,11 @@
-
-powershell
-
 #region Script Info
-$Script_Name = "MoveSetup.ps1"
-$Description = "Moves the new machine setup script over to the local device."
+$Script_Name = "SW_Center_CheckIn.ps1"
+$Description = "This script will tell software center to run its checks for application and software updates."
 $Author = "Seth Burns - System Administrator II - Service Center"
 $last_tested = "05-27-25"
 $version = "1.0.0"
-$live = "Live"
-$bmgr = "Live"
+$live = "Test"
+$bmgr = "Test"
 #endregion
 
 #region Text Colors 
@@ -36,13 +33,12 @@ Write-Output "--------------------" | Yellow
 
 
 
-New-Item -Path "c:\" -Name "Temp" -ItemType "directory" -ErrorAction Ignore
-New-Item -Path "c:\Temp" -Name "ServiceCenter" -ItemType "directory" -ErrorAction Ignore
-copy-item -path %RESOURCE_FILE% -destination "C:\temp\servicecenter\NewMachineSetup.ps1"
-explorer "c:\temp\servicecenter"
+
+Invoke-WMIMethod -Namespace root\ccm -Class SMS_CLIENT -Name TriggerSchedule "{00000000-0000-0000-0000-000000000121}"
+
+Invoke-WMIMethod -Namespace root\ccm -Class SMS_CLIENT -Name TriggerSchedule "{00000000-0000-0000-0000-000000000114}"
+
+Invoke-WMIMethod -Namespace root\ccm -Class SMS_CLIENT -Name TriggerSchedule "{00000000-0000-0000-0000-000000000021}"
 
 
 
-## Last Tested on 02-08-2024
-## Author : Seth Burns
-## Resource File: NewMachineSetup.ps1

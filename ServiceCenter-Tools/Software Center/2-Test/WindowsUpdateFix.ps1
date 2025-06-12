@@ -1,14 +1,11 @@
-
-powershell
-
 #region Script Info
-$Script_Name = "MoveSetup.ps1"
-$Description = "Moves the new machine setup script over to the local device."
+$Script_Name = "WindowsUpdateFix.ps1"
+$Description = "Script to stop and restart windows update services, it also remakes the sw distribution folder."
 $Author = "Seth Burns - System Administrator II - Service Center"
 $last_tested = "05-27-25"
 $version = "1.0.0"
-$live = "Live"
-$bmgr = "Live"
+$live = "Test"
+$bmgr = "Test"
 #endregion
 
 #region Text Colors 
@@ -34,15 +31,18 @@ Write-Output "--------------------" | Yellow
 ## END Main Descriptor
 #endregion
 
+cmd.exe
+
+net stop wuauserv
+net stop cryptSvc
+net stop bits
+net stop msiserver
+Rename-Item C:\Windows\SoftwareDistribution SoftwareDistribution.old
+Rename-Item C:\Windows\System32\catroot2 catroot2.old
+net start wuauserv
+net start cryptSvc
+net start bits
+net start msiserver
 
 
-New-Item -Path "c:\" -Name "Temp" -ItemType "directory" -ErrorAction Ignore
-New-Item -Path "c:\Temp" -Name "ServiceCenter" -ItemType "directory" -ErrorAction Ignore
-copy-item -path %RESOURCE_FILE% -destination "C:\temp\servicecenter\NewMachineSetup.ps1"
-explorer "c:\temp\servicecenter"
-
-
-
-## Last Tested on 02-08-2024
-## Author : Seth Burns
-## Resource File: NewMachineSetup.ps1
+exit

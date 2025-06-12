@@ -1,14 +1,13 @@
-
-powershell
+Powershell
 
 #region Script Info
-$Script_Name = "MoveSetup.ps1"
-$Description = "Moves the new machine setup script over to the local device."
+$Script_Name = "PSWindowsUpdate_Setup.ps1"
+$Description = "This script will setup and install pswindowsupdate"
 $Author = "Seth Burns - System Administrator II - Service Center"
 $last_tested = "05-27-25"
 $version = "1.0.0"
-$live = "Live"
-$bmgr = "Live"
+$live = "Test"
+$bmgr = "Test"
 #endregion
 
 #region Text Colors 
@@ -22,6 +21,7 @@ function White   { process { Write-Host $_ -ForegroundColor White }}
 function Gray    { process { Write-Host $_ -ForegroundColor Gray }}
 #endregion
 
+
 #region Main Descriptor
 ## START Main Descriptor
 Write-Output "--------------------" | Yellow
@@ -34,15 +34,15 @@ Write-Output "--------------------" | Yellow
 ## END Main Descriptor
 #endregion
 
+## change the script execution policy on machine
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine
+
+## Install the windows update module for powershell
+Install-module pswindowsupdate
+Y 
+A 
+
+## Get and install windows updates - forced
+Get-windowsupdate -microsoftupdate -acceptall -install -autoreboot
 
 
-New-Item -Path "c:\" -Name "Temp" -ItemType "directory" -ErrorAction Ignore
-New-Item -Path "c:\Temp" -Name "ServiceCenter" -ItemType "directory" -ErrorAction Ignore
-copy-item -path %RESOURCE_FILE% -destination "C:\temp\servicecenter\NewMachineSetup.ps1"
-explorer "c:\temp\servicecenter"
-
-
-
-## Last Tested on 02-08-2024
-## Author : Seth Burns
-## Resource File: NewMachineSetup.ps1

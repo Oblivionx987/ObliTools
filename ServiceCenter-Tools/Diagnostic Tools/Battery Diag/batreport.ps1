@@ -1,9 +1,8 @@
-
-powershell
+Powershell
 
 #region Script Info
-$Script_Name = "MoveSetup.ps1"
-$Description = "Moves the new machine setup script over to the local device."
+$Script_Name = "batreport.ps1"
+$Description = "This script will Output a Battery Report to Temp folder"
 $Author = "Seth Burns - System Administrator II - Service Center"
 $last_tested = "05-27-25"
 $version = "1.0.0"
@@ -34,15 +33,16 @@ Write-Output "--------------------" | Yellow
 ## END Main Descriptor
 #endregion
 
+## Variables
+$Computer = $env:computername
 
+## MAIN
+Write-Output "Creating Battery Report for $Computer" | Green
+powercfg /batteryreport /output "C:\temp\$Computer-battery-report.html"
+Write-Output "Battery Report Output Completed Please See Temp Folder"
 
-New-Item -Path "c:\" -Name "Temp" -ItemType "directory" -ErrorAction Ignore
-New-Item -Path "c:\Temp" -Name "ServiceCenter" -ItemType "directory" -ErrorAction Ignore
-copy-item -path %RESOURCE_FILE% -destination "C:\temp\servicecenter\NewMachineSetup.ps1"
-explorer "c:\temp\servicecenter"
+Start-Process "C:\temp\$Computer-battery-report.html"
 
+read-host "Press ENTER to Continue"
 
-
-## Last Tested on 02-08-2024
-## Author : Seth Burns
-## Resource File: NewMachineSetup.ps1
+Exit

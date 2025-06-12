@@ -21,20 +21,17 @@ function White   { process { Write-Host $_ -ForegroundColor White }}
 function Gray    { process { Write-Host $_ -ForegroundColor Gray }}
 #endregion
 
-
 #region Main Descriptor
 ## START Main Descriptor
-Write-Output "--------------------"
+Write-Output "--------------------" | Yellow
 Write-Output "$Author" | Yellow
-Write-Output "$Script_Name"
+Write-Output "$Script_Name" | Yellow
 Write-Output "$version , $last_tested" | Yellow
-Write-Output "$live , $bmgr"
+Write-Output "$live , $bmgr" | Yellow
 Write-Output "$Description" | Yellow
-Write-Output "--------------------"
+Write-Output "--------------------" | Yellow
 ## END Main Descriptor
 #endregion
-
-
 
 # Define the directory to search
 $directory = "C:\Users\114825\OneDrive - Sierra Nevada Corporation\ObliTools"

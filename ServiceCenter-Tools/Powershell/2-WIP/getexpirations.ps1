@@ -1,6 +1,6 @@
 $author = "Seth Burns - System Administrator II - Service Center"
 $description = "This script will check active directory for expiring accounts"
-$live = "Restriced"
+$live = "Restricted"
 $Version = "1.0.2"
 $bmgr = "Restricted"
 

@@ -1,14 +1,12 @@
 
-powershell
-
 #region Script Info
-$Script_Name = "MoveSetup.ps1"
-$Description = "Moves the new machine setup script over to the local device."
+$Script_Name = "Missingnumbers.ps1"
+$Description = "This script will check active directory for missing assigned numbers"
 $Author = "Seth Burns - System Administrator II - Service Center"
 $last_tested = "05-27-25"
 $version = "1.0.0"
-$live = "Live"
-$bmgr = "Live"
+$live = "Restricted"
+$bmgr = "Restricted"
 #endregion
 
 #region Text Colors 
@@ -36,13 +34,31 @@ Write-Output "--------------------" | Yellow
 
 
 
-New-Item -Path "c:\" -Name "Temp" -ItemType "directory" -ErrorAction Ignore
-New-Item -Path "c:\Temp" -Name "ServiceCenter" -ItemType "directory" -ErrorAction Ignore
-copy-item -path %RESOURCE_FILE% -destination "C:\temp\servicecenter\NewMachineSetup.ps1"
-explorer "c:\temp\servicecenter"
 
+# Import the Active Directory module
+Import-Module ActiveDirectory
 
+# Define the output CSV file path
+$outputCsv = "C:\temp\AD_TelephoneInfo.csv"
 
-## Last Tested on 02-08-2024
-## Author : Seth Burns
-## Resource File: NewMachineSetup.ps1
+# Get all user accounts in AD
+$adUsers = Get-ADUser -Filter * -Property DisplayName, TelephoneNumber
+
+# Create an array to hold the results
+$result = @()
+
+# Iterate through each user and check for telephone information
+foreach ($user in $adUsers) {
+    $userDetails = [PSCustomObject]@{
+        DisplayName     = $user.DisplayName
+        TelephoneNumber = $user.TelephoneNumber
+    }
+    
+    # Add the user details to the results array
+    $result += $userDetails
+}
+
+# Export the results to a CSV file
+$result | Export-Csv -Path $outputCsv -NoTypeInformation
+
+Write-Host "Telephone information has been exported to $outputCsv"
