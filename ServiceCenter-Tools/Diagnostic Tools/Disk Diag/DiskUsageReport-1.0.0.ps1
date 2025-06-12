@@ -1,9 +1,16 @@
+#region Parameters
+param (
+    [string]$OutputDirectory = "C:\temp",
+    [switch]$OpenReport
+)
+#endregion
+
 #region Script Info
 $Script_Name = "Disk Usage Report"
 $Description = "This script will generate a disk usage report for the local machine and save it as an HTML file"
 $Author = "Seth Burns - System Administrator II - Service Center"
-$last_tested = "05-23-2025"
-$version = "1.0.0"
+$last_tested = "06-11-2025"
+$version = "1.1.0"
 $live = "Test"
 $bmgr = "Test"
 #endregion
@@ -31,33 +38,57 @@ Write-Output "--------------------" | Yellow
 ## END Main Descriptor
 #endregion
 
-
-
-# Ensure the output directory exists
-if (!(Test-Path -Path "C:\temp")) {
-    New-Item -Path "C:\" -Name "temp" -ItemType "Directory" | Out-Null
+#region Ensure Output Directory Exists
+if (!(Test-Path -Path $OutputDirectory)) {
+    try {
+        New-Item -Path $OutputDirectory -ItemType "Directory" -Force | Out-Null
+    } catch {
+        Write-Error "Failed to create output directory: $OutputDirectory"
+        exit 1
+    }
 }
+#endregion
 
-# Collect disk data for local hard drives (DriveType 3 represents local disks)
-$diskData = Get-WmiObject -Class Win32_LogicalDisk -Filter "DriveType=3" | 
-    Select-Object `
-        DeviceID, 
-        VolumeName, 
-        FileSystem,
-        @{Name="Size (GB)"; Expression = { "{0:N2}" -f ($_.Size / 1GB) } },
-        @{Name="FreeSpace (GB)"; Expression = { "{0:N2}" -f ($_.FreeSpace / 1GB) } }
+#region Collect Disk Data
+try {
+    $diskData = Get-CimInstance -ClassName Win32_LogicalDisk -Filter "DriveType=3" | 
+        Select-Object `
+            DeviceID, 
+            VolumeName, 
+            FileSystem,
+            @{Name="Size (GB)"; Expression = { "{0:N2}" -f ($_.Size / 1GB) } },
+            @{Name="FreeSpace (GB)"; Expression = { "{0:N2}" -f ($_.FreeSpace / 1GB) } }
+} catch {
+    Write-Error "Failed to retrieve disk data"
+    exit 1
+}
+#endregion
 
-# Convert the disk data to HTML with a title and simple CSS for styling
+#region Generate HTML Report
 $htmlReport = $diskData | ConvertTo-Html -Title "Disk Data Report" -PreContent "<h1>Disk Data Report</h1>" -Head @"
 <style>
     table { border-collapse: collapse; width: 100%; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
     th { background-color: #f2f2f2; }
+    h1 { font-family: Arial, sans-serif; color: #333; }
 </style>
 "@
 
-# Output the HTML content to a file in C:\temp
-$htmlReport | Out-File -FilePath "C:\temp\DiskData.html" -Encoding UTF8
+$htmlFilePath = Join-Path -Path $OutputDirectory -ChildPath "DiskData.html"
+try {
+    $htmlReport | Out-File -FilePath $htmlFilePath -Encoding UTF8
+} catch {
+    Write-Error "Failed to write HTML report to file: $htmlFilePath"
+    exit 1
+}
+#endregion
 
-# Optional: Open the HTML report in the default browser
-Start-Process "C:\temp\DiskData.html"
+#region Open HTML Report
+if ($OpenReport) {
+    try {
+        Start-Process $htmlFilePath
+    } catch {
+        Write-Error "Failed to open HTML report: $htmlFilePath"
+    }
+}
+#endregion
