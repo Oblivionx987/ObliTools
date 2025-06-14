@@ -6,18 +6,6 @@
     "Path": "C:\\Program Files\\One Identity\\Active Roles\\8.1\\Console\\ActiveRoles.msc"
   },
   {
-    "Nickname": "Microsoft.ConfigurationManagement (MCM)",
-    "Group": "",
-    "Delay": 0,
-    "Path": "C:\\Program Files (x86)\\Configuration Manager Console\\bin\\Microsoft.ConfigurationManagement.exe"
-  },
-  {
-    "Nickname": "Powershell",
-    "Group": "",
-    "Delay": 0,
-    "Path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
-  },
-  {
     "Nickname": "CMD",
     "Group": "",
     "Delay": 0,
@@ -30,15 +18,39 @@
     "Path": "C:\\Windows\\System32\\compmgmt.msc"
   },
   {
-    "Nickname": "Powershell 7",
+    "Nickname": "Event Viewer",
     "Group": "",
     "Delay": 0,
-    "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe"
+    "Path": "C:\\Windows\\System32\\eventvwr.exe"
   },
   {
     "Nickname": "LAPS",
     "Group": "",
     "Delay": 0,
     "Path": "C:\\Program Files\\LAPS\\AdmPwd.UI.exe"
+  },
+  {
+    "Nickname": "Microsoft.ConfigurationManagement (MCM)",
+    "Group": "",
+    "Delay": 0,
+    "Path": "C:\\Program Files (x86)\\Configuration Manager Console\\bin\\Microsoft.ConfigurationManagement.exe"
+  },
+  {
+    "Nickname": "Powershell",
+    "Group": "",
+    "Delay": 0,
+    "Path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+  },
+  {
+    "Nickname": "Powershell 7",
+    "Group": "",
+    "Delay": 0,
+    "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe"
+  },
+  {
+    "Nickname": "MMC",
+    "Group": "",
+    "Delay": 0,
+    "Path": "C:\\Windows\\System32\\mmc.exe"
   }
 ]

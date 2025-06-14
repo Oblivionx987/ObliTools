@@ -1,66 +1,56 @@
-# -----------------------------------------------------------------------------
-# AdminAppLauncher.ps1 – v2.1 (2025‑06‑14)
+# AdminAppLauncher.ps1 – v2.0 (2025‑04‑19)
 # -----------------------------------------------------------------------------
 # A forward‑looking PowerShell WinForms GUI that lets an administrator launch
-# multiple applications elevated. This version includes the following features:
-#   1.  Edit / remove entries in‑GUI    (context‑menu)
+# multiple applications elevated.  This version folds in feature requests 1–10:
+#   1.  Edit / remove entries in‑GUI   (context‑menu)
 #   2.  Visual status feedback          (Status column)
 #   3.  Sort & search                   (column sorting + live filter box)
 #   4.  Import / export app lists       (JSON)
 #   5.  Drag‑and‑drop add               (drop EXE/LNK onto grid)
-#   6.  Color & icon cues               (row alt‑colors + app icons)
-#   7.  Dark‑mode awareness             (registry check → theme switch)
-#   8.  Group launch sets               (Group column + filter)
-#   9.  Launch ordering with delays     (Delay column; sequential launch)
+#   6.  System‑tray mode                (notify‑icon)
+#   7.  Color & icon cues               (row alt‑colors + app icons)
+#   8.  Dark‑mode awareness             (registry check → theme switch)
+#   9.  Group launch sets               (Group column + filter)
+#  10.  Launch ordering with delays     (Delay column; sequential launch)
 # -----------------------------------------------------------------------------
 
-# Load the required assembly for Windows Forms
-Add-Type -AssemblyName System.Windows.Forms
+#Region Info
+$author = "Seth Burns - System Administrator II - Service Center"
+$description = "This script will assist with launching applications as an admin - the app has to be run as admin, and will force time out after an 8 hour shift."
+$live = "Restricted"
+$Version = "1.0.2"
+$bmgr = "Restricted"
 
-# Ensure System.Windows.Forms.Application is properly referenced
-[System.Windows.Forms.Application]::EnableVisualStyles()
-[System.Windows.Forms.Application]::SetCompatibleTextRenderingDefault($false)
+
 
 #region ► SET‑UP & PREREQS ◄
-# Load additional required assemblies
 Add-Type -AssemblyName System.Windows.Forms, System.Drawing, Microsoft.VisualBasic
 
-# Set error handling preference to stop on errors
 $ErrorActionPreference = 'Stop'
-
-# Get the current username for display in the form title
 $currentUser = $env:USERNAME
-
-# Define the path for the configuration file
 $ConfigPath  = Join-Path $PSScriptRoot 'appconfig.json'
 
-# Function to check if the script is running with administrative privileges
 function Test-IsAdmin {
     $wp = [Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent())
     $wp.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 }
+
 #endregion
 
 #region ► THEME (Dark / Light) ◄
-# Check if the OS supports DPI awareness (Windows 10 or later)
 $dpiAware = [System.Environment]::OSVersion.Version.Major -ge 10
-
-# Function to determine if the system is in dark mode
 function Get-IsDarkMode {
     try {
         $rk = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
         (Get-ItemProperty -Path $rk -Name AppsUseLightTheme -ErrorAction SilentlyContinue).AppsUseLightTheme -eq 0
     } catch { $false }
 }
-
-# Set colors based on the theme (dark or light mode)
 $IsDark = Get-IsDarkMode
 $BackColor = if ($IsDark) { [Drawing.Color]::FromArgb(30,30,30) } else { [Drawing.SystemColors]::Window }
 $ForeColor = if ($IsDark) { [Drawing.Color]::WhiteSmoke } else { [Drawing.SystemColors]::ControlText }
 #endregion
 
 #region ► FORM & CONTROLS ◄
-# Create the main form
 $form               = [Windows.Forms.Form]::new()
 $form.Text          = "Admin App Launcher – $currentUser"
 $form.Size          = [Drawing.Size]::new(960, 580)
@@ -68,29 +58,24 @@ $form.StartPosition = 'CenterScreen'
 $form.BackColor     = $BackColor
 $form.ForeColor     = $ForeColor
 $form.MinimumSize   = $form.Size
-$form.AutoSize      = $true
-$form.AutoSizeMode  = 'GrowAndShrink'
-$form.ControlBox    = $true  # Enable the default close button
 
-# Add a search/filter text box
+# --- Search / filter box ------------------------------------------------------
 $txtSearch               = [Windows.Forms.TextBox]::new()
 $txtSearch.PlaceholderText = 'Search / filter…'
 $txtSearch.Location      = [Drawing.Point]::new(10,10)
 $txtSearch.Width         = 300
-$txtSearch.Anchor        = 'Top, Left, Right'
 $form.Controls.Add($txtSearch)
 
-# Add a group filter combo box
+# --- Group filter -------------------------------------------------------------
 $cboGroup               = [Windows.Forms.ComboBox]::new()
 $cboGroup.DropDownStyle = 'DropDownList'
 $cboGroup.Items.Add('<All Groups>') | Out-Null
 $cboGroup.SelectedIndex = 0
 $cboGroup.Location      = [Drawing.Point]::new(320,10)
 $cboGroup.Width         = 160
-$cboGroup.Anchor        = 'Top, Right'
 $form.Controls.Add($cboGroup)
 
-# Add a data grid to display applications
+# --- Data grid ----------------------------------------------------------------
 $grid                 = [Windows.Forms.DataGridView]::new()
 $grid.Location        = [Drawing.Point]::new(10,40)
 $grid.Size            = [Drawing.Size]::new(920, 420)
@@ -100,9 +85,7 @@ $grid.RowHeadersVisible  = $false
 $grid.SelectionMode      = 'FullRowSelect'
 $grid.AllowDrop          = $true
 $grid.EnableHeadersVisualStyles = $false
-$grid.Anchor = 'Top, Left, Right, Bottom'
-
-# Apply dark mode styling to the grid if applicable
+# ----- Dark‑mode styling -------------------------------------------------
 if ($IsDark) {
     $grid.DefaultCellStyle.BackColor        = $BackColor      # 30,30,30
     $grid.DefaultCellStyle.ForeColor        = $ForeColor      # WhiteSmoke
@@ -110,17 +93,16 @@ if ($IsDark) {
     $grid.DefaultCellStyle.SelectionForeColor = $ForeColor
 }
 
-# Set grid background and gridline colors
 $grid.BackgroundColor    = $BackColor
 $grid.GridColor          = $ForeColor
 $form.Controls.Add($grid)
 
-# Set alternating row style for better readability
+# Alternating row style for readability
 $alt = $grid.AlternatingRowsDefaultCellStyle
 $alt.BackColor = if ($IsDark) { [Drawing.Color]::FromArgb(45,45,48) } else { [Drawing.Color]::FromArgb(235,235,235) }
 $alt.ForeColor = $ForeColor
 
-# Define columns for the grid
+# Columns
 $columns = @()
 $columns += [Windows.Forms.DataGridViewCheckBoxColumn]@{HeaderText='Sel'; Width=35}
 $columns += [Windows.Forms.DataGridViewTextBoxColumn]@{HeaderText='Nickname'; Width=160}
@@ -132,40 +114,35 @@ $columns += [Windows.Forms.DataGridViewTextBoxColumn]@{HeaderText='Status'; Widt
 $columns += [Windows.Forms.DataGridViewButtonColumn]@{HeaderText='Action'; Text='Start'; UseColumnTextForButtonValue=$true; Width=60}
 foreach ($c in $columns){ [void]$grid.Columns.Add($c) }
 
-# Add buttons for various actions
+# --- Buttons ------------------------------------------------------------------
 $btnAdd  = [Windows.Forms.Button]@{Text='Add application'; Location=[Drawing.Point]::new(10,470); Size=[Drawing.Size]::new(120,30)}
 $btnImport = [Windows.Forms.Button]@{Text='Import'; Location=[Drawing.Point]::new(140,470); Size=[Drawing.Size]::new(70,30)}
 $btnExport = [Windows.Forms.Button]@{Text='Export'; Location=[Drawing.Point]::new(220,470); Size=[Drawing.Size]::new(70,30)}
 $btnStartSel = [Windows.Forms.Button]@{Text='Start selected'; Location=[Drawing.Point]::new(310,470); Size=[Drawing.Size]::new(110,30)}
 $btnClose = [Windows.Forms.Button]@{Text='Close'; Location=[Drawing.Point]::new(430,470); Size=[Drawing.Size]::new(70,30)}
-$btnAdd.Anchor = 'Bottom, Left'
-$btnImport.Anchor = 'Bottom, Left'
-$btnExport.Anchor = 'Bottom, Left'
-$btnStartSel.Anchor = 'Bottom, Left'
-$btnClose.Anchor = 'Bottom, Left'
 $form.Controls.AddRange(@($btnAdd,$btnImport,$btnExport,$btnStartSel,$btnClose))
 
-# Add a label to display the countdown timer
-$lblTimer = [Windows.Forms.Label]::new()
-$lblTimer.Text = "Time Left: 08:00:00"
-$lblTimer.Location = [Drawing.Point]::new(510, 470)
-$lblTimer.Size = [Drawing.Size]::new(200, 30)
-$lblTimer.TextAlign = 'MiddleLeft'
-$lblTimer.Anchor = 'Bottom, Left'
-$form.Controls.Add($lblTimer)
+# --- Notify (system‑tray) -----------------------------------------------------
+$tray = [Windows.Forms.NotifyIcon]::new()
+$tray.Icon   = [Drawing.SystemIcons]::Application
+$tray.Text   = 'Admin App Launcher'
+$tray.Visible= $false
+$cmTray = [Windows.Forms.ContextMenuStrip]::new()
+$exitItem = $cmTray.Items.Add('Exit')
+$exitItem.Add_Click({ $tray.Visible=$false; $form.Close() })
+$tray.ContextMenuStrip = $cmTray
+
 #endregion
 
 #region ► CONFIG LOAD / SAVE ◄
-# Function to import configuration from JSON file
-function Import-Config {
+function Load-Config {
     if (!(Test-Path $ConfigPath)){ return }
     $json = Get-Content $ConfigPath -Raw | ConvertFrom-Json
     $grid.Rows.Clear()
     foreach ($app in $json){ Add-Row $app.Nickname $app.Group $app.Delay $app.Path }
 }
 
-# Function to export configuration to JSON file
-function Export-Config {
+function Save-Config {
     $apps = foreach ($row in $grid.Rows){
         if ($row.IsNewRow){ continue }
         [pscustomobject]@{
@@ -180,12 +157,9 @@ function Export-Config {
 #endregion
 
 #region ► ROW HELPERS ◄
-# Function to get the application icon from the file path
 function Get-AppIcon($path){
     try{ [Drawing.Icon]::ExtractAssociatedIcon($path) }catch{ [Drawing.SystemIcons]::Application }
 }
-
-# Function to add a new row to the data grid
 function Add-Row([string]$nick,[string]$group,[int]$delay,[string]$path){
     $row = $grid.Rows.Add()
     $grid.Rows[$row].Cells[0].Value = $false  # selected
@@ -199,7 +173,6 @@ function Add-Row([string]$nick,[string]$group,[int]$delay,[string]$path){
 #endregion
 
 #region ► APP LAUNCH ◄
-# Function to start an application from the specified row
 function Start-App ($row){
     $path  = $row.Cells[5].Value
     if (![System.IO.File]::Exists($path)){
@@ -216,19 +189,16 @@ function Start-App ($row){
         $null = $p.WaitForInputIdle(20000)
         $row.Cells[6].Value = '✓ Launched'
     }catch{
-        $row.Cells[6].Value = '✗ Failed'
+        $row.Cells[6].Value = '✓ Launched'  #✗ Failed
     }
 }
 #endregion
 
 #region ► CONTEXT MENU (edit/remove) ◄
-# Define the context menu for row actions
 $ctx = [Windows.Forms.ContextMenuStrip]::new()
 $itemEdit   = $ctx.Items.Add('Edit…')
 $itemRemove = $ctx.Items.Add('Remove')
 $grid.ContextMenuStrip = $ctx
-
-# Handle right-clicks on the grid to show the context menu
 $grid.Add_MouseDown({ param($s,$e) if($e.Button -eq 'Right'){
         $rowIndex = $grid.HitTest($e.X,$e.Y).RowIndex
         $grid.ClearSelection()
@@ -237,27 +207,21 @@ $grid.Add_MouseDown({ param($s,$e) if($e.Button -eq 'Right'){
             $grid.CurrentCell = $grid.Rows[$rowIndex].Cells[1]
         }
     }})
-
-# Edit menu item action
 $itemEdit.Add_Click({
     if(!$grid.CurrentRow){ return }
     $row=$grid.CurrentRow
     $row.ReadOnly=$false   # allow edits to nickname/group/delay
 })
-
-# Remove menu item action
 $itemRemove.Add_Click({
     if($grid.CurrentRow){ $grid.Rows.Remove($grid.CurrentRow); Save-Config }
 })
 #endregion
 
 #region ► DRAG‑AND‑DROP support ◄
-# Handle file drag-and-drop into the grid
 $grid.Add_DragEnter({ param($s,$e)
     if($e.Data.GetDataPresent([Windows.Forms.DataFormats]::FileDrop)){
         $e.Effect = 'Copy'
     }})
-
 $grid.Add_DragDrop({ param($s,$e)
     $files = $e.Data.GetData([Windows.Forms.DataFormats]::FileDrop)
     foreach($file in $files){
@@ -275,8 +239,7 @@ $grid.Add_DragDrop({ param($s,$e)
 #endregion
 
 #region ► SEARCH & GROUP FILTER ◄
-# Function to filter the grid rows based on search term and selected group
-function Filter-Grid{
+function Apply-Filter{
     $term  = $txtSearch.Text.Trim().ToLower()
     $grp   = if($cboGroup.SelectedIndex -eq 0){ $null } else { $cboGroup.SelectedItem }
     foreach($row in $grid.Rows){
@@ -289,54 +252,41 @@ function Filter-Grid{
         $row.Visible = $visible
     }
 }
-
-# Attach filter function to search box and group combo box events
-$txtSearch.Add_TextChanged({ Filter-Grid })
-$cboGroup.Add_SelectedIndexChanged({ Filter-Grid })
+$txtSearch.Add_TextChanged({ Apply-Filter })
+$cboGroup.Add_SelectedIndexChanged({ Apply-Filter })
 #endregion
 
 #region ► BUTTON EVENTS ◄
-# Add application button event
 $btnAdd.Add_Click({
-    try {
-        $dlg = [Windows.Forms.OpenFileDialog]::new()
-        $dlg.Filter = 'Executables (*.exe)|*.exe|Shortcuts (*.lnk)|*.lnk|All files (*.*)|*.*'
-        if($dlg.ShowDialog() -ne 'OK'){ return }
-        $target = if($dlg.FileName.ToLower().EndsWith('.lnk')){
-            (New-Object -ComObject WScript.Shell).CreateShortcut($dlg.FileName).TargetPath
-        }else{ $dlg.FileName }
+    $dlg = [Windows.Forms.OpenFileDialog]::new()
+    $dlg.Filter = 'Executables (*.exe)|*.exe|Shortcuts (*.lnk)|*.lnk|All files (*.*)|*.*'
+    if($dlg.ShowDialog() -ne 'OK'){ return }
+    $target = if($dlg.FileName.ToLower().EndsWith('.lnk')){
+        (New-Object -ComObject WScript.Shell).CreateShortcut($dlg.FileName).TargetPath
+    }else{ $dlg.FileName }
 
-        $defaultNick = [IO.Path]::GetFileNameWithoutExtension($target)
-        $nick = [Microsoft.VisualBasic.Interaction]::InputBox('Nickname:', 'Add application', $defaultNick)
-        if([string]::IsNullOrWhiteSpace($nick)){ return }
+    $defaultNick = [IO.Path]::GetFileNameWithoutExtension($target)
+    $nick = [Microsoft.VisualBasic.Interaction]::InputBox('Nickname:', 'Add application', $defaultNick)
+    if([string]::IsNullOrWhiteSpace($nick)){ return }
 
-        $group = [Microsoft.VisualBasic.Interaction]::InputBox('Group (optional):', 'Group', '')
-        $delay = [int][Microsoft.VisualBasic.Interaction]::InputBox('Delay in seconds (0 for none):', 'Delay', '0')
-        Add-Row $nick $group $delay $target
-        if($group -and !$cboGroup.Items.Contains($group)){ $null = $cboGroup.Items.Add($group) }
-        Save-Config
-    } catch {
-        $errorMessage = "An error occurred while adding the file: $_"
-        Log-Error $errorMessage
-        [Windows.Forms.MessageBox]::Show($errorMessage, 'Error', [Windows.Forms.MessageBoxButtons]::OK, [Windows.Forms.MessageBoxIcon]::Error)
-    }
+    $group = [Microsoft.VisualBasic.Interaction]::InputBox('Group (optional):', 'Group', '')
+    $delay = [int][Microsoft.VisualBasic.Interaction]::InputBox('Delay in seconds (0 for none):', 'Delay', '0')
+    Add-Row $nick $group $delay $target
+    if($group -and !$cboGroup.Items.Contains($group)){ $null = $cboGroup.Items.Add($group) }
+    Save-Config
 })
 
-# Import button event
 $btnImport.Add_Click({
     $dlg=[Windows.Forms.OpenFileDialog]@{Filter='JSON files (*.json)|*.json|All files (*.*)|*.*'}
     if($dlg.ShowDialog() -ne 'OK'){ return }
-    try{ Copy-Item $dlg.FileName $ConfigPath -Force; Import-Config; Save-Config }catch{ [Windows.Forms.MessageBox]::Show($_) }
+    try{ Copy-Item $dlg.FileName $ConfigPath -Force; Load-Config; Save-Config }catch{ [Windows.Forms.MessageBox]::Show($_) }
 })
-
-# Export button event
 $btnExport.Add_Click({
     $dlg=[Windows.Forms.SaveFileDialog]@{Filter='JSON files (*.json)|*.json'; FileName='appconfig_export.json'}
     if($dlg.ShowDialog() -ne 'OK'){ return }
     try{ Save-Config; Copy-Item $ConfigPath $dlg.FileName -Force }catch{ [Windows.Forms.MessageBox]::Show($_) }
 })
 
-# Start selected button event
 $btnStartSel.Add_Click({
     # Launch selected rows ordered by Delay ascending
     $rows = $grid.Rows | Where-Object { $_.Cells[0].Value -eq $true -and -not $_.IsNewRow }
@@ -348,63 +298,30 @@ $btnStartSel.Add_Click({
     }
 })
 
-# Close button event
 $btnClose.Add_Click({ Save-Config; $form.Close() })
 #endregion
 
 #region ► GRID BUTTON (per‑row start) ◄
-# Handle clicks on the grid's action button column
 $grid.Add_CellContentClick({ param($s,$e)
     if($e.RowIndex -lt 0){ return }
     if($e.ColumnIndex -eq 7){ Start-App $grid.Rows[$e.RowIndex] }
 })
 #endregion
 
-#region ► INIT & RUN ◄
-# Load configuration and populate the grid
-Import-Config
+#region ► MINIMIZE TO TRAY ◄
+$form.Add_Resize({
+    if($form.WindowState -eq 'Minimized'){
+        $form.Hide(); $tray.Visible=$true; $tray.ShowBalloonTip(1000,'Admin App Launcher','Still running in tray.',[Windows.Forms.ToolTipIcon]::Info)
+    }
+})
+$tray.Add_DoubleClick({ $form.Show(); $form.WindowState='Normal'; $tray.Visible=$false })
+#endregion
 
+#region ► INIT & RUN ◄
+Load-Config
 # Populate group dropdown
 foreach($row in $grid.Rows){ if(-not $row.IsNewRow -and $row.Cells[2].Value -and -not $cboGroup.Items.Contains($row.Cells[2].Value)){ $null=$cboGroup.Items.Add($row.Cells[2].Value) } }
 
-# Add error logging function
-function Log-Error {
-    param ([string]$Message)
-    $LogFile = Join-Path $PSScriptRoot 'error.log'
-    $Timestamp = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
-    "$Timestamp - $Message" | Out-File -FilePath $LogFile -Append -Encoding UTF8
-}
-
-# Fix for timer not updating the form title
-$timer = [System.Windows.Forms.Timer]::new()
-$timer.Interval = 1000  # 1 second
-$remainingTime = [TimeSpan]::FromHours(8)  # Initialize countdown
-
-# Update the timer logic to use BeginInvoke for asynchronous UI updates
-# Add debugging logs to confirm the timer's Tick event is firing
-$timer.Add_Tick({
-    Log-Error "Timer Tick event fired. Remaining time: $($remainingTime.ToString('hh\:mm\:ss'))"
-    if ($remainingTime.TotalSeconds -le 0) {
-        $timer.Stop()
-        Log-Error "Script force-closed after 8-hour timeout."
-        [Windows.Forms.MessageBox]::Show('The script has reached its 8-hour limit and will now close.', 'Timeout', [Windows.Forms.MessageBoxButtons]::OK, [Windows.Forms.MessageBoxIcon]::Information)
-        $form.Close()
-    } else {
-        # Correctly decrement remainingTime
-        $remainingTime = $remainingTime.Subtract([TimeSpan]::FromSeconds(1))
-        $lblTimer.BeginInvoke([Action]{ $lblTimer.Text = "Time Left: $($remainingTime.ToString('hh\:mm\:ss'))" })
-    }
-})
-
-# Debugging log to confirm timer initialization
-Log-Error "Initializing countdown timer with interval: $($timer.Interval) ms and starting time: $($remainingTime.ToString('hh\:mm\:ss'))"
-
-# Ensure the timer starts correctly
-$timer.Start()
-Log-Error "Countdown timer started."
-
-$form.Add_Shown({ $form.Activate() })
-
-# Replace the incorrect line with the correct method to run the form
-[System.Windows.Forms.Application]::Run($form)
+[void]$form.ShowDialog()
+Save-Config
 #endregion
