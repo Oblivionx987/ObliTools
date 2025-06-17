@@ -1,0 +1,28 @@
+# Define the path to the mapped drives in the registry
+$mappedDrivesPath = "HKCU:\Network"
+
+# Get all subkeys under the mapped drives path
+$mappedDrives = Get-ChildItem -Path $mappedDrivesPath
+
+# Initialize an array to hold the mapped drives information
+$mappedDrivesInfo = @()
+
+# Loop through each mapped drive
+foreach ($drive in $mappedDrives) {
+    # Get the properties of each mapped drive
+    $driveProperties = Get-ItemProperty -Path $drive.PSPath
+    
+    # Create a custom object to hold the drive information
+    $driveInfo = [PSCustomObject]@{
+        DriveLetter = $drive.PSChildName
+        RemotePath  = $driveProperties.RemotePath
+        UserName    = $driveProperties.UserName
+        ProviderName = $driveProperties.ProviderName
+    }
+    
+    # Add the drive information to the array
+    $mappedDrivesInfo += $driveInfo
+}
+
+# Output the list of mapped drives
+$mappedDrivesInfo | Format-Table -AutoSize
