@@ -12,12 +12,13 @@ foreach ($drive in $mappedDrives) {
     # Get the properties of each mapped drive
     $driveProperties = Get-ItemProperty -Path $drive.PSPath
     
-    # Create a custom object to hold the drive information
+    # Create a custom object to hold the drive information, now including the registry path
     $driveInfo = [PSCustomObject]@{
-        DriveLetter = $drive.PSChildName
-        RemotePath  = $driveProperties.RemotePath
-        UserName    = $driveProperties.UserName
-        ProviderName = $driveProperties.ProviderName
+        DriveLetter   = $drive.PSChildName
+        RemotePath    = $driveProperties.RemotePath
+        UserName      = $driveProperties.UserName
+        ProviderName  = $driveProperties.ProviderName
+        RegistryPath  = $drive.PSPath
     }
     
     # Add the drive information to the array
