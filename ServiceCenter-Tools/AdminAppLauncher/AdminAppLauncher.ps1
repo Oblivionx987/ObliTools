@@ -112,6 +112,16 @@ $tabSource.ForeColor = $ForeColor
 $tabControl.TabPages.AddRange(@($tabLauncher, $tabCompCheck, $tabSiteCheck, $tabScripts, $tabSource))
 
 # --- Move launcher controls into APP LAUNCHER tab ---
+# Use a TableLayoutPanel to hold the search panel, grid, and button panel for proper docking
+$mainLauncherPanel = [Windows.Forms.TableLayoutPanel]::new()
+$mainLauncherPanel.Dock = 'Fill'
+$mainLauncherPanel.BackColor = $BackColor
+$mainLauncherPanel.ColumnCount = 1
+$mainLauncherPanel.RowCount = 3
+$mainLauncherPanel.RowStyles.Add([System.Windows.Forms.RowStyle]::new([System.Windows.Forms.SizeType]::Absolute, 36)) # Search panel
+$mainLauncherPanel.RowStyles.Add([System.Windows.Forms.RowStyle]::new([System.Windows.Forms.SizeType]::Percent, 100)) # Grid
+$mainLauncherPanel.RowStyles.Add([System.Windows.Forms.RowStyle]::new([System.Windows.Forms.SizeType]::Absolute, 48)) # Button panel
+
 # Add a TableLayoutPanel to hold search, group filter, and timer label
 $searchPanel = [Windows.Forms.TableLayoutPanel]::new()
 $searchPanel.Dock = 'Top'
@@ -125,7 +135,7 @@ $searchPanel.ColumnStyles.Add([System.Windows.Forms.ColumnStyle]::new([System.Wi
 
 # Add a search/filter text box
 $txtSearch = [Windows.Forms.TextBox]::new()
-$txtSearch.PlaceholderText = 'Search / filter…'
+# $txtSearch.PlaceholderText = 'Search / filter…'  # Not supported in Windows PowerShell WinForms
 $txtSearch.Dock = 'Fill'
 $searchPanel.Controls.Add($txtSearch, 0, 0)
 
@@ -148,7 +158,7 @@ $searchPanel.Controls.Add($cboGroup, 1, 0)
 # Remove timer label from search panel
 $searchPanel.Controls.Add((New-Object Windows.Forms.Label), 2, 0) # Empty placeholder
 
-$tabLauncher.Controls.Add($searchPanel)
+$mainLauncherPanel.Controls.Add($searchPanel, 0, 0)
 
 # Add a data grid to display applications
 $grid = [Windows.Forms.DataGridView]::new()
@@ -177,7 +187,7 @@ if ($IsDark) {
 # Set grid background and gridline colors
 $grid.BackgroundColor    = $BackColor
 $grid.GridColor          = $ForeColor
-$tabLauncher.Controls.Add($grid)
+$mainLauncherPanel.Controls.Add($grid, 0, 1)
 
 # Set alternating row style for better readability
 $alt = $grid.AlternatingRowsDefaultCellStyle
@@ -205,151 +215,73 @@ $btnStartSel = [Windows.Forms.Button]@{Text='Start Selection'; Size=[Drawing.Siz
 
 $buttonPanel = [Windows.Forms.FlowLayoutPanel]::new()
 $buttonPanel.FlowDirection = 'LeftToRight'
-$buttonPanel.Dock = 'Bottom'
+$buttonPanel.Dock = 'Fill'
 $buttonPanel.Padding = [System.Windows.Forms.Padding]::new(8, 4, 8, 4)
 $buttonPanel.AutoSize = $true
 $buttonPanel.WrapContents = $false
 $buttonPanel.Controls.AddRange(@($btnAdd,$btnRemove,$btnImport,$btnExport,$btnStartSel))
-$tabLauncher.Controls.Add($buttonPanel)
+$mainLauncherPanel.Controls.Add($buttonPanel, 0, 2)
 
-# --- COMP CHECK TAB: Device Status Checker UI ---
-# Remove placeholder label
-$tabCompCheck.Controls.Clear()
+# Clear and add the main panel to the tab
+$tabLauncher.Controls.Clear()
+$tabLauncher.Controls.Add($mainLauncherPanel)
 
-# Device grid
-if ($null -eq $compGrid) {
-    $compGrid = [System.Windows.Forms.DataGridView]::new()
-    $compGrid.Dock = 'Fill'
-    $compGrid.AllowUserToAddRows = $false
-    $compGrid.RowHeadersVisible = $false
-    $compGrid.SelectionMode = 'FullRowSelect'
-    $compGrid.AutoSizeColumnsMode = 'Fill'
-    $compGrid.Columns.Clear()
-    [void]$compGrid.Columns.Add('Name','Name')
-    [void]$compGrid.Columns.Add('Address','IP / Hostname')
-    [void]$compGrid.Columns.Add('Group','Group')
-    $statusCol = $compGrid.Columns.Add('Status','Status')
-    $compGrid.Columns[$statusCol].ReadOnly = $true
-    $tabCompCheck.Controls.Add($compGrid)
-}
-
-# Input panel (bottom)
-$compPanel = [System.Windows.Forms.Panel]::new()
-$compPanel.Dock = 'Bottom'
-$compPanel.Height = 110
-$compPanel.Padding = '10,10,10,10'
-$tabCompCheck.Controls.Add($compPanel)
-
-$lblNameC  = [System.Windows.Forms.Label]@{Text='Name:';AutoSize=$true;Location=[Drawing.Point]::new(0,5)}
-$txtNameC  = [System.Windows.Forms.TextBox]@{Location=[Drawing.Point]::new(50,2);Size=[Drawing.Size]::new(150,22)}
-$lblIPC    = [System.Windows.Forms.Label]@{Text='IP/Host (opt):';AutoSize=$true;Location=[Drawing.Point]::new(220,5)}
-$txtIPC    = [System.Windows.Forms.TextBox]@{Location=[Drawing.Point]::new(310,2);Size=[Drawing.Size]::new(150,22)}
-$lblGroupC = [System.Windows.Forms.Label]@{Text='Group:';AutoSize=$true;Location=[Drawing.Point]::new(480,5)}
-$txtGroupC = [System.Windows.Forms.TextBox]@{Location=[Drawing.Point]::new(530,2);Size=[Drawing.Size]::new(120,22)}
-$btnAddC   = [System.Windows.Forms.Button]@{Text='Add';Location=[Drawing.Point]::new(660,0);Size=[Drawing.Size]::new(80,26)}
-$btnRemoveC   = [System.Windows.Forms.Button]@{Text='Remove Selected';Location=[Drawing.Point]::new(0,45);Size=[Drawing.Size]::new(130,26)}
-$lblIntervalC = [System.Windows.Forms.Label]@{Text='Interval (s):';AutoSize=$true;Location=[Drawing.Point]::new(220,50)}
-$numIntervalC = New-Object System.Windows.Forms.NumericUpDown
-$numIntervalC.Location=[Drawing.Point]::new(300,45)
-$numIntervalC.Minimum = 5
-$numIntervalC.Maximum = 900
-$numIntervalC.Value = 30
-$numIntervalC.Width = 70
-$numIntervalC.Increment = 5
-$compPanel.Controls.AddRange(@($lblNameC,$txtNameC,$lblIPC,$txtIPC,$lblGroupC,$txtGroupC,$btnAddC,$btnRemoveC,$lblIntervalC,$numIntervalC))
-
-# Device data and helpers
-$compJsonPath = Join-Path $PSScriptRoot 'devices.json'
-$compPingCount = 3
-if (-not (Test-Path $compJsonPath)) { '[]' | Set-Content $compJsonPath -Encoding UTF8 }
-$compDevices = Get-Content $compJsonPath -Raw | ConvertFrom-Json | ForEach-Object {
-    $_ | Add-Member -NotePropertyName ConsecutiveFailures -NotePropertyValue 0 -Force
-    $_
-}
-if (-not $compDevices) { $compDevices = @() }
-
-function Save-CompDevices {
-    $compDevices | Select-Object Name,Address,Group,Status,ConsecutiveFailures |
-        ConvertTo-Json -Depth 3 | Set-Content $compJsonPath -Encoding UTF8
-}
-
-function Show-CompToast($title,$text) {
-    try {
-        if (-not (Get-Module -ListAvailable -Name BurntToast)) { throw 'BurntToast missing' }
-        Import-Module BurntToast -ErrorAction Stop | Out-Null
-        New-BurntToastNotification -Text $title,$text | Out-Null
-    } catch {
-        # fallback: no-op
-    }
-    [System.Media.SystemSounds]::Exclamation.Play()
-}
-
-function Invoke-CompPingBatch([System.Collections.IList]$deviceRows) {
-    $pool=[runspacefactory]::CreateRunspacePool(1,10); $pool.Open(); $jobs=@()
-    foreach ($row in $deviceRows) {
-        $addr=$row.Cells[1].Value; $ps=[powershell]::Create(); $ps.RunspacePool=$pool
-        $null=$ps.AddScript("Test-Connection -ComputerName '$addr' -Count 1 -Quiet -TimeoutSeconds 2")
-        $jobs += [pscustomobject]@{Row=$row;PS=$ps;Handle=$ps.BeginInvoke()}
-    }
-    foreach ($j in $jobs) {
-        $online=[bool]($j.PS.EndInvoke($j.Handle)); $j.PS.Dispose(); $row=$j.Row
-        $name=$row.Cells[0].Value; $device=$compDevices | Where-Object Name -eq $name; if (-not $device){continue}
-        if ($online){$device.ConsecutiveFailures=0;$status='Online'}else{$device.ConsecutiveFailures++;$status=($device.ConsecutiveFailures -ge $compPingCount)?'Offline':'Online'}
-        $prev=$row.Tag; $row.Cells[3].Value=$status
-        $row.Cells[3].Style.ForeColor= if($status -eq 'Online'){[Drawing.Color]::ForestGreen}elseif($status -eq 'Offline'){[Drawing.Color]::Red}else{[Drawing.Color]::Orange}
-        $row.Tag=$status; $device.Status=$status
-        if ($prev -eq 'Offline' -and $status -eq 'Online') { Show-CompToast 'Device Online' "$name ($addr) is now online." }
-    }
-    $pool.Close();$pool.Dispose()
-}
-
-# Seed grid
-foreach ($d in $compDevices) {
-    $row=$compGrid.Rows.Add($d.Name,$d.Address,$d.Group,$d.Status); $compGrid.Rows[$row].Tag=$d.Status }
-
-# Add device
-$btnAddC.Add_Click({
-    $name=$txtNameC.Text.Trim(); if (-not $name) { return }
-    $addr=$txtIPC.Text.Trim(); if (-not $addr) { $addr=$name }
-    $grp=$txtGroupC.Text.Trim()
-    $rowIdx = $compGrid.Rows.Add($name,$addr,$grp,'Unknown')
-    $compGrid.Rows[$rowIdx].Tag='Unknown'
-    # Defensive: Ensure $compDevices is always an array
-    if ($compDevices -is [PSCustomObject] -and -not ($compDevices -is [System.Collections.IEnumerable])) { $compDevices = @($compDevices) }
-    if ($null -eq $compDevices) { $compDevices = @() }
-    $compDevices += [PSCustomObject]@{Name=$name;Address=$addr;Group=$grp;Status='Unknown';ConsecutiveFailures=0}
-    Save-CompDevices
-    $txtNameC.Clear();$txtIPC.Clear();$txtGroupC.Clear()
+# --- BUTTON EVENT HANDLERS FOR APP LAUNCHER TAB ---
+$btnAdd.Add_Click({
+    $nick = [Microsoft.VisualBasic.Interaction]::InputBox('Enter application nickname:', 'Add Application')
+    if ([string]::IsNullOrWhiteSpace($nick)) { return }
+    $ofd = New-Object System.Windows.Forms.OpenFileDialog
+    $ofd.Filter = 'Executables (*.exe;*.lnk)|*.exe;*.lnk|All files (*.*)|*.*'
+    $ofd.Title = 'Select Application Executable or Shortcut'
+    if ($ofd.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { return }
+    $path = $ofd.FileName
+    if ([string]::IsNullOrWhiteSpace($path)) { return }
+    $group = [Microsoft.VisualBasic.Interaction]::InputBox('Enter group (optional):', 'Add Application')
+    $delay = [Microsoft.VisualBasic.Interaction]::InputBox('Enter launch delay in seconds (optional, default 0):', 'Add Application', '0')
+    if (-not $delay -or $delay -lt 0) { $delay = 0 }
+    Add-Row $nick $group $delay $path
+    Export-Config
 })
 
-# Remove device
-$btnRemoveC.Add_Click({
-    $toRemove = @()
-    $rowsToRemove = @($compGrid.SelectedRows)
+$btnRemove.Add_Click({
+    $rowsToRemove = @($grid.SelectedRows)
     foreach ($row in $rowsToRemove) {
-        $name = $row.Cells[0].Value
-        $toRemove += $name
+        if (-not $row.IsNewRow) { $grid.Rows.Remove($row) }
     }
-    foreach ($row in $rowsToRemove) {
-        $compGrid.Rows.Remove($row)
+    Export-Config
+})
+
+$btnImport.Add_Click({
+    Import-Config
+})
+
+$btnExport.Add_Click({
+    Export-Config
+    [System.Windows.Forms.MessageBox]::Show('Configuration exported to appconfig.json.','Export Complete',[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Information)
+})
+
+$btnStartSel.Add_Click({
+    $rows = $grid.Rows | Where-Object { $_.Cells[1].Value -eq $true -and -not $_.IsNewRow }
+    if (-not $rows) {
+        [System.Windows.Forms.MessageBox]::Show('No applications selected.','Start Selection',[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Warning)
+        return
     }
-    # Remove from $compDevices in-place
-    for ($i = $compDevices.Count - 1; $i -ge 0; i--) {
-        if ($toRemove -contains $compDevices[$i].Name) {
-            $compDevices.RemoveAt($i)
+    foreach ($row in $rows) {
+        $path = $row.Cells[7].Value
+        $delay = [int]$row.Cells[5].Value
+        if ($delay -gt 0) { Start-Sleep -Seconds $delay }
+        try {
+            Start-Process -FilePath $path -Verb RunAs
+            $row.Cells[0].Value = 'Started'
+        } catch {
+            $row.Cells[0].Value = 'Error'
+            Write-ErrorLog ("Failed to start {0}: {1}" -f $path, $_)
         }
     }
-    Save-CompDevices
 })
-
-# Timer and interval
-$compTimer=New-Object System.Windows.Forms.Timer; $compTimer.Interval=($numIntervalC.Value)*1000
-$compTimer.Add_Tick({ Invoke-CompPingBatch $compGrid.Rows; Save-CompDevices }); $compTimer.Start()
-$numIntervalC.Add_ValueChanged({ $compTimer.Interval=($numIntervalC.Value)*1000 })
-
-# Cleanup on close
-$form.Add_FormClosing({ $compTimer.Stop(); Save-CompDevices })
-#endregion
+# =========================
+#  FUNCTIONS (must be after controls are created!)
+# =========================
 
 #region ► CONFIG LOAD / SAVE ◄
 # Function to import configuration from JSON file
@@ -359,10 +291,10 @@ function Import-Config {
         $json = Get-Content $ConfigPath -Raw | ConvertFrom-Json
         $grid.SuspendLayout()
         $grid.Rows.Clear()
-        # Ensure $json is always treated as an array (fix for single object and null)
+        # Ensure $json is always an array (robust for all cases)
         if ($null -eq $json) {
             $json = @()
-        } elseif ($json -is [PSCustomObject] -and -not ($json -is [System.Collections.IEnumerable])) {
+        } elseif ($json -isnot [array]) {
             $json = @($json)
         }
         foreach ($app in $json){
@@ -373,9 +305,10 @@ function Import-Config {
             }
         }
         $grid.ResumeLayout()
-        Refresh-Groups
+        Update-Groups
     } catch {
-        Log-Error "Failed to import config: $_"
+        Write-ErrorLog "Failed to import config: $_"
+        [System.Windows.Forms.MessageBox]::Show('Failed to import appconfig.json. Please check the file for errors.','Config Import Error',[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error)
     }
 }
 
@@ -399,7 +332,7 @@ function Export-Config {
                 }
                 $apps | ConvertTo-Json -Depth 2 | Set-Content -Encoding UTF8 $ConfigPath
             } catch {
-                Log-Error "Failed to export config: $_"
+                Write-ErrorLog "Failed to export config: $_"
             }
             $global:ExportConfigPending = $false
         })
@@ -407,7 +340,7 @@ function Export-Config {
 }
 
 # Helper to refresh group dropdown based on current grid
-function Refresh-Groups {
+function Update-Groups {
     $current = $cboGroup.SelectedItem
     $cboGroup.Items.Clear()
     $cboGroup.Items.Add('<All Groups>') | Out-Null
@@ -436,7 +369,8 @@ function Get-AppIcon($path){
 #   $delay - Launch delay in seconds (int)
 #   $path  - Full path to the executable (string)
 function Add-Row([string]$nick,[string]$group,[int]$delay,[string]$path){
-    if ([string]::IsNullOrWhiteSpace($nick)) { $nick = '[Unnamed]' }
+    # Defensive: Only add row if Nickname and Path are present and non-empty
+    if ([string]::IsNullOrWhiteSpace($nick) -or [string]::IsNullOrWhiteSpace($path)) { return }
     if (-not $delay -or $delay -lt 0) { $delay = 0 }
     $row = $grid.Rows.Add()
     $grid.Rows[$row].Cells[0].Value = ''         # Status
@@ -450,187 +384,26 @@ function Add-Row([string]$nick,[string]$group,[int]$delay,[string]$path){
 }
 #endregion
 
-#region ► APP LAUNCH ◄
-# Function to start an application from the specified row
-function Start-App ($row){
-    $path  = $row.Cells[7].Value  # Path is column 7
-    if (-not [System.IO.File]::Exists($path)){
-        $row.Cells[0].Value = '✗ Missing'  # Status column
-        Log-Error "File not found: $path"
-        return
-    }
-    $row.Cells[0].Value = 'Launching…'  # Status column
-    try{
-        if (Test-IsAdmin){
-            $p = Start-Process -FilePath $path -PassThru -WindowStyle Normal
-        }else{
-            $p = Start-Process -FilePath $path -Verb RunAs -PassThru -WindowStyle Normal
-        }
-        Start-Sleep -Milliseconds 500
-        if ($p.HasExited) {
-            $row.Cells[0].Value = '✗ Failed (Exited)'
-        } else {
-            $row.Cells[0].Value = '✓ Launched'
-        }
-    }catch{
-        $row.Cells[0].Value = '✗ Failed'
-        Log-Error ('Failed to launch ' + $path + ': ' + $_.ToString())
-    }
-}
+#region ► TESTING / ADMIN TOOLS ◄
+# Optional: Add a Refresh Config button for quick testing
+$btnRefreshConfig = [Windows.Forms.Button]@{Text='Refresh Config'; Size=[Drawing.Size]::new(110,30)}
+$btnRefreshConfig.Add_Click({ Import-Config })
+$buttonPanel.Controls.Add($btnRefreshConfig)
 #endregion
 
-#region ► CONTEXT MENU (edit/remove) ◄
-# Define the context menu for row actions
-$ctx = [Windows.Forms.ContextMenuStrip]::new()
-$itemEdit   = $ctx.Items.Add('Edit…')
-$itemRemove = $ctx.Items.Add('Remove')
-$grid.ContextMenuStrip = $ctx
-
-# Handle right-clicks on the grid to show the context menu
-$grid.Add_MouseDown({ param($s,$e) if($e.Button -eq 'Right'){
-        $rowIndex = $grid.HitTest($e.X,$e.Y).RowIndex
-        $grid.ClearSelection()
-        if($rowIndex -ge 0){
-            $grid.Rows[$rowIndex].Selected = $true
-            $grid.CurrentCell = $grid.Rows[$rowIndex].Cells[1]
-        }
-    }})
-
-# Edit menu item action (standardized: prompt for new values, update row, refresh groups, save config)
-$itemEdit.Add_Click({
-    if(!$grid.CurrentRow){ return }
-    $row = $grid.CurrentRow
-    $oldNick = $row.Cells[1].Value
-    $oldGroup = $row.Cells[2].Value
-    $oldDelay = $row.Cells[3].Value
-    $newNick = [Microsoft.VisualBasic.Interaction]::InputBox('Edit Nickname:', 'Edit', $oldNick)
-    if([string]::IsNullOrWhiteSpace($newNick)){ return }
-    $newGroup = [Microsoft.VisualBasic.Interaction]::InputBox('Edit Group (optional):', 'Edit', $oldGroup)
-    $delayInput = [Microsoft.VisualBasic.Interaction]::InputBox('Edit Delay in seconds (0 for none):', 'Edit', $oldDelay)
-    $newDelay = 0
-    if ($delayInput -match '^[0-9]+$') { $newDelay = [int]$delayInput }
-    $row.Cells[1].Value = $newNick
-    $row.Cells[2].Value = $newGroup
-    $row.Cells[3].Value = $newDelay
-    Refresh-Groups
-    Export-Config
-})
-
-# Remove menu item action (standardized: remove, refresh groups, save config)
-$itemRemove.Add_Click({
-    if($grid.CurrentRow){ $grid.Rows.Remove($grid.CurrentRow); Refresh-Groups; Export-Config }
-})
-#endregion
-
-#region ► DRAG‑AND‑DROP support ◄
-# Handle file drag-and-drop into the grid
-$grid.Add_DragEnter({ param($s,$e)
-    if($e.Data.GetDataPresent([Windows.Forms.DataFormats]::FileDrop)){
-        $e.Effect = 'Copy'
-    }})
-
-$grid.Add_DragDrop({ param($s,$e)
-    $files = $e.Data.GetData([Windows.Forms.DataFormats]::FileDrop)
-    foreach($file in $files){
-        if($file -match '\\.(lnk|exe)$'){
-            $target = if($file.ToLower().EndsWith('.lnk')){
-                try {
-                    $sh = New-Object -ComObject WScript.Shell
-                    $sh.CreateShortcut($file).TargetPath
-                } catch {
-                    Log-Error "Failed to resolve shortcut: $file - $_"
-                    $file
-                }
-            }else{ $file }
-            $nick = [System.IO.Path]::GetFileNameWithoutExtension($target)
-            Add-Row $nick '' 0 $target
-        }
-    }
-    Export-Config
-})
-#endregion
-
-#region ► BUTTON EVENTS ◄
-# Add application button event (standardized style)
-$btnAdd.Add_Click({
-    try {
-        $dlg = [Windows.Forms.OpenFileDialog]::new()
-        $dlg.Filter = 'Executables (*.exe)|*.exe|Shortcuts (*.lnk)|*.lnk|All files (*.*)|*.*'
-        if($dlg.ShowDialog() -ne 'OK'){ return }
-        $target = if($dlg.FileName.ToLower().EndsWith('.lnk')){
-            try {
-                (New-Object -ComObject WScript.Shell).CreateShortcut($dlg.FileName).TargetPath
-            } catch {
-                Log-Error "Failed to resolve shortcut: $($dlg.FileName) - $_"
-                $dlg.FileName
-            }
-        }else{ $dlg.FileName }
-
-        $defaultNick = [IO.Path]::GetFileNameWithoutExtension($target)
-        $nick = [Microsoft.VisualBasic.Interaction]::InputBox('Nickname:', 'Add application', $defaultNick)
-        if([string]::IsNullOrWhiteSpace($nick)){ return }
-
-        $group = [Microsoft.VisualBasic.Interaction]::InputBox('Group (optional):', 'Group', '')
-        $delayInput = [Microsoft.VisualBasic.Interaction]::InputBox('Delay in seconds (0 for none):', 'Delay', '0')
-        $delay = 0
-        if ($delayInput -match '^[0-9]+$') { $delay = [int]$delayInput }
-        Add-Row $nick $group $delay $target
-        Refresh-Groups
-        Export-Config
-    } catch {
-        $errorMessage = "An error occurred while adding the file: $_"
-        Log-Error $errorMessage
-        # No user dialog for non-critical error
-    }
-})
-
-# Import button event (standardized style)
-$btnImport.Add_Click({
-    $dlg = [Windows.Forms.OpenFileDialog]::new()
-    $dlg.Filter = 'JSON files (*.json)|*.json|All files (*.*)|*.*'
-    if($dlg.ShowDialog() -ne 'OK'){ return }
-    try{ Copy-Item $dlg.FileName $ConfigPath -Force; Import-Config; Export-Config }catch{ Log-Error $_ }
-})
-
-# Export button event (standardized style)
-$btnExport.Add_Click({
-    $dlg = [Windows.Forms.SaveFileDialog]::new()
-    $dlg.Filter = 'JSON files (*.json)|*.json'
-    $dlg.FileName = 'appconfig_export.json'
-    if($dlg.ShowDialog() -ne 'OK'){ return }
-    try{ Export-Config; Copy-Item $ConfigPath $dlg.FileName -Force }catch{ Log-Error $_ }
-})
-
-# Start selected button event (standardized style)
-$btnStartSel.Add_Click({
-    # Launch selected rows ordered by Delay ascending
-    $rows = $grid.Rows | Where-Object { $_.Cells[0].Value -eq $true -and -not $_.IsNewRow }
-    $ordered = $rows | Sort-Object { [int]$_.Cells[3].Value }
-    foreach($row in $ordered){
-        $delay = [int]$row.Cells[3].Value
-        if($delay -gt 0){ $row.Cells[6].Value = "Waiting $delay s…"; $form.Refresh(); Start-Sleep -Seconds $delay }
-        Start-App $row
-    }
-})
-#endregion
-
-#region ► GRID BUTTON (per‑row start) ◄
-# Handle clicks on the grid's action button column
-$grid.Add_CellContentClick({ param($s,$e)
-    if($e.RowIndex -lt 0){ return }
-    if($e.ColumnIndex -eq 2){ Start-App $grid.Rows[$e.RowIndex] }
-})
-#endregion
-
-#region ► INIT & RUN ◄
+#region ► ERROR LOGGING ◄
 # Add error logging function
-function Log-Error {
+function Write-ErrorLog {
     param ([string]$Message)
     $LogFile = Join-Path $PSScriptRoot 'error.log'
     $Timestamp = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
     "$Timestamp - $Message" | Out-File -FilePath $LogFile -Append -Encoding UTF8
 }
+#endregion
 
+# =========================
+# 5. Load Configuration & Start
+# =========================
 # Load configuration and populate the grid
 Import-Config
 
@@ -679,7 +452,7 @@ $siteGrid.AutoSizeColumnsMode = 'Fill'
 $tabSiteCheck.Controls.Add($siteGrid)
 
 # Input panel (bottom)
-$sitePanel = [System.Windows.Forms.Panel]::new()
+$sitePanel = [Windows.Forms.Panel]::new()
 $sitePanel.Dock = 'Bottom'
 $sitePanel.Height = 110
 $sitePanel.Padding = '10,10,10,10'
@@ -813,7 +586,7 @@ $siteTimer.Interval = ($numIntervalS.Value) * 1000
 $siteTimer.Add_Tick({
     Update-SiteStatus
     $nextRefreshLabel.Text = "Next Refresh: " + (Get-Date).AddMilliseconds($siteTimer.Interval).ToString('HH:mm:ss')
-    Save-SiteList
+    Export-SiteList
 })
 $siteTimer.Start()
 $numIntervalS.Add_ValueChanged({ $siteTimer.Interval = ($numIntervalS.Value) * 1000 })
@@ -845,6 +618,23 @@ $siteGrid.Add_SelectionChanged({
 # Cleanup on close
 $form.Add_FormClosing({ $siteTimer.Stop(); Save-SiteList })
 
+# --- COMP CHECK TAB: Computer Checker Grid ---
+$tabCompCheck.Controls.Clear()
+
+# Create the computer checker grid
+$compGrid = [System.Windows.Forms.DataGridView]::new()
+$compGrid.Dock = 'Fill'
+$compGrid.AllowUserToAddRows = $false
+$compGrid.RowHeadersVisible = $false
+$compGrid.SelectionMode = 'FullRowSelect'
+$compGrid.AutoSizeColumnsMode = 'Fill'
+[void]$compGrid.Columns.Add('Name','Name')
+[void]$compGrid.Columns.Add('Address','Address')
+[void]$compGrid.Columns.Add('Group','Group')
+[void]$compGrid.Columns.Add('Status','Status')
+[void]$compGrid.Columns.Add('ConsecutiveFailures','Consecutive Failures')
+$tabCompCheck.Controls.Add($compGrid)
+
 # Listen for cell value changes in compGrid to keep $compDevices and devices.json in sync
 $compGrid.Add_CellValueChanged({
     param($s, $e)
@@ -862,6 +652,80 @@ $compGrid.Add_CellValueChanged({
     } else {
         # If not found, add it (should not happen, but for safety)
         $compDevices += [PSCustomObject]@{Name=$name;Address=$addr;Group=$grp;Status='Unknown';ConsecutiveFailures=0}
+    }
+    Save-CompDevices
+})
+
+# Load and save device list
+$compJsonPath = Join-Path $PSScriptRoot 'devices.json'
+if (-not (Test-Path $compJsonPath)) { '[]' | Set-Content $compJsonPath -Encoding UTF8 }
+$compDevices = Get-Content $compJsonPath -Raw | ConvertFrom-Json
+if (-not $compDevices) { $compDevices = @() }
+
+function Save-CompDevices {
+    $compDevices | ConvertTo-Json -Depth 3 | Set-Content $compJsonPath -Encoding UTF8
+}
+
+# Seed grid
+foreach ($dev in $compDevices) {
+    $row = $compGrid.Rows.Add($dev.Name, $dev.Address, $dev.Group, $dev.Status, $dev.ConsecutiveFailures)
+}
+
+# Add/Remove/Check buttons
+$compPanel = [Windows.Forms.Panel]::new()
+$compPanel.Dock = 'Bottom'
+$compPanel.Height = 50
+$tabCompCheck.Controls.Add($compPanel)
+
+$btnAddComp = [Windows.Forms.Button]@{Text='Add Device';Location=[Drawing.Point]::new(0,0);Size=[Drawing.Size]::new(100,26)}
+$btnRemoveComp = [Windows.Forms.Button]@{Text='Remove Selected';Location=[Drawing.Point]::new(110,0);Size=[Drawing.Size]::new(130,26)}
+$btnTestComp = [Windows.Forms.Button]@{Text='Test Status';Location=[Drawing.Point]::new(250,0);Size=[Drawing.Size]::new(120,26)}
+$compPanel.Controls.AddRange(@($btnAddComp,$btnRemoveComp,$btnTestComp))
+
+# Add device
+$btnAddComp.Add_Click({
+    $name = [Microsoft.VisualBasic.Interaction]::InputBox('Enter device name:', 'Add Device')
+    if ([string]::IsNullOrWhiteSpace($name)) { return }
+    $addr = [Microsoft.VisualBasic.Interaction]::InputBox('Enter device address (hostname or IP):', 'Add Device')
+    if ([string]::IsNullOrWhiteSpace($addr)) { return }
+    $group = [Microsoft.VisualBasic.Interaction]::InputBox('Enter group (optional):', 'Add Device')
+    $rowIndex = $compGrid.Rows.Add($name, $addr, $group, 'Unknown', 0)
+    $global:compDevices += [PSCustomObject]@{Name=$name;Address=$addr;Group=$group;Status='Unknown';ConsecutiveFailures=0}
+    Save-CompDevices
+})
+
+# Remove device
+$btnRemoveComp.Add_Click({
+    foreach ($row in @($compGrid.SelectedRows)) {
+        $nameToRemove = $row.Cells[0].Value
+        $compGrid.Rows.Remove($row)
+        $compDevices = $compDevices | Where-Object { $_.Name -ne $nameToRemove }
+    }
+    Save-CompDevices
+})
+
+# Test status
+$btnTestComp.Add_Click({
+    foreach ($row in $compGrid.Rows) {
+        $addr = $row.Cells[1].Value
+        try {
+            $ping = Test-Connection -ComputerName $addr -Count 1 -Quiet -ErrorAction Stop
+            $row.Cells[3].Value = if ($ping) { 'Online' } else { 'Offline' }
+            if ($ping) {
+                $row.Cells[4].Value = 0
+            } else {
+                $row.Cells[4].Value = [int]$row.Cells[4].Value + 1
+            }
+        } catch {
+            $row.Cells[3].Value = 'Error'
+            $row.Cells[4].Value = [int]$row.Cells[4].Value + 1
+        }
+        # Update $compDevices
+        $dev = $compDevices | Where-Object { $_.Name -eq $row.Cells[0].Value }
+        if ($dev) {
+            $dev.Status = $row.Cells[3].Value
+            $dev.ConsecutiveFailures = $row.Cells[4].Value
+        }
     }
     Save-CompDevices
 })
