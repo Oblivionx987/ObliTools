@@ -1,3 +1,5 @@
+Powershell
+
 <#
 .SYNOPSIS
     Compares mapped drives (from registry) and physical drives, detects conflicts, and outputs detailed info.
