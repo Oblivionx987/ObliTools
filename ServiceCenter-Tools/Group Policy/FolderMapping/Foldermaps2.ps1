@@ -13,27 +13,39 @@ param(
 )
 
 function Get-MappedDrives {
-    $mappedDrivesPath = "HKCU:\Network"
+    # List of registry locations to check for mapped drives
+    $mappedDrivesPaths = @(
+        "HKCU:\Network", # Current user
+        "HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Shares", # Server shares
+        "HKLM:\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\NetworkProvider\HardenedPaths", # Hardened paths
+        "HKU:\.DEFAULT\Network" # Default user profile
+    )
     $mappedDrivesInfo = @()
-    try {
-        $mappedDrives = Get-ChildItem -Path $mappedDrivesPath -ErrorAction Stop
-        foreach ($drive in $mappedDrives) {
-            try {
-                $driveProperties = Get-ItemProperty -Path $drive.PSPath -ErrorAction Stop
-                $driveInfo = [PSCustomObject]@{
-                    DriveLetter   = $drive.PSChildName
-                    RemotePath    = $driveProperties.RemotePath
-                    UserName      = $driveProperties.UserName
-                    ProviderName  = $driveProperties.ProviderName
-                    RegistryPath  = $drive.PSPath
+    foreach ($mappedDrivesPath in $mappedDrivesPaths) {
+        try {
+            $mappedDrives = Get-ChildItem -Path $mappedDrivesPath -ErrorAction Stop
+            foreach ($drive in $mappedDrives) {
+                try {
+                    $driveProperties = Get-ItemProperty -Path $drive.PSPath -ErrorAction Stop
+                    $driveInfo = [PSCustomObject]@{
+                        DriveLetter   = $drive.PSChildName
+                        RemotePath    = $driveProperties.RemotePath
+                        UserName      = $driveProperties.UserName
+                        ProviderName  = $driveProperties.ProviderName
+                        RegistryPath  = $drive.PSPath
+                        RegistryRoot  = $mappedDrivesPath
+                    }
+                    $mappedDrivesInfo += $driveInfo
+                } catch {
+                    Write-Warning "Failed to read properties for mapped drive: $($drive.PSChildName) in $mappedDrivesPath ($_)."
                 }
-                $mappedDrivesInfo += $driveInfo
-            } catch {
-                Write-Warning "Failed to read properties for mapped drive: $($drive.PSChildName) ($_)."
+            }
+        } catch {
+            # Only warn if the path exists but is inaccessible, not if it simply doesn't exist
+            if (Test-Path $mappedDrivesPath) {
+                Write-Warning "Failed to enumerate mapped drives in registry path: $mappedDrivesPath ($_)."
             }
         }
-    } catch {
-        Write-Warning "Failed to enumerate mapped drives in registry: $_"
     }
     return $mappedDrivesInfo
 }
