@@ -1,7 +1,7 @@
 
 #region Script Info
-$Script_Name = ""
-$Description = ""
+$Script_Name = "MultiSiteChecker-1.0.0.ps1"
+$Description = "This script will monitor the status of multiple sites, allowing you to add, remove, and filter sites, and log their statuses."
 $Author = "Seth Burns - System Administrator II - Service Center"
 $last_tested = "05-27-25"
 $version = "1.0.0"

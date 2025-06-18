@@ -1,12 +1,11 @@
-
 #region Script Info
-$Script_Name = "Enable_Smart_Card_Enforcement.ps1"
-$Description = "This script will enable Smart Card enforcement on the local machine by setting the registry key."
+$Script_Name = "ExportPolicyINcmd.ps1"
+$Description = "This script will export Group Policy results for a specified user and the local computer."
 $Author = "Seth Burns - System Administrator II - Service Center"
 $last_tested = "06-17-25"
 $version = "1.0.0"
-$live = "WIP"
-$bmgr = "WIP"
+$live = "Live"
+$bmgr = "Live"
 #endregion
 
 #region Text Colors 
@@ -32,8 +31,6 @@ Write-Output "--------------------"
 ## END Main Descriptor
 #endregion
 
-$Registrypath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\'
-$Name = 'scforceoption'
-$Value = '1'
-New-ItemProperty -path $Registrypath -Name $Name -Value $Value -PropertyType DWORD -Force
-Exit
+
+$UserInput = Read-Host "Please Input User ID" 
+gpresult /r /user $UserInput

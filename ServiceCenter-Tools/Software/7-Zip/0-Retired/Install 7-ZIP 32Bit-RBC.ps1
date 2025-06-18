@@ -6,9 +6,9 @@ $Script_Name = "Install 7-ZIP 32Bit-RBC.ps1"
 $Description = "This script will Uninstall 7-ZIP 32 Bit if it exists then it will Install 7-ZIP 32Bit"
 $Author = "Seth Burns - System Administrator II - Service Center"
 $last_tested = "05-27-25"
-$version = "5.0.0"
-$live = "Live"
-$bmgr = "Live"
+$version = "1.0.1"
+$live = "Retired"
+$bmgr = "Retired"
 #endregion
 
 
