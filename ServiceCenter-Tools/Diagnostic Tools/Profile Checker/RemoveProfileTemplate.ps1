@@ -92,7 +92,7 @@ Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-
 
 Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-448539723-362288127-725345543-1082840" -Recurse
 
-Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-448539723-362288127-725345543-1066780" -Recurse
+cd c
 
 
 
