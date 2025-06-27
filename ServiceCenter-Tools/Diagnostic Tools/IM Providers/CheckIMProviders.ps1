@@ -48,6 +48,7 @@ foreach ($path in $imProviderPaths) {
 # Display the collected IM provider information
 if ($imProviders.Count -gt 0) {
     $imProviders | Format-Table -AutoSize
+    Write-Output "\nIM Providers detected: $($imProviders.Count)"
 } else {
     Write-Output "No IM providers found."
 }
@@ -70,6 +71,7 @@ foreach ($path in $defaultChatAppPaths) {
 # Display the default chat app settings
 if ($defaultChatAppSettings.Count -gt 0) {
     $defaultChatAppSettings | Format-Table -AutoSize
+    Write-Output "\nDefault chat app settings detected: $($defaultChatAppSettings.Count)"
 } else {
     Write-Output "No default chat app settings found."
 }
@@ -83,4 +85,35 @@ if ($teamsSettings) {
     $teamsSettings.PSObject.Properties | Format-Table Name, Value -AutoSize
 } else {
     Write-Output "No Microsoft Teams specific settings found."
+}
+
+# Function to check for conflicts with Teams as default IM provider
+function Test-IMProviderConflicts {
+    param (
+        [array]$defaultChatAppSettings,
+        [array]$imProviders
+    )
+    $conflicts = @()
+    foreach ($setting in $defaultChatAppSettings) {
+        if ($setting.DefaultIMApp -and $setting.DefaultIMApp -ne 'Teams') {
+            $conflicts += "DefaultIMApp is set to '$($setting.DefaultIMApp)' in $($setting.Path), not 'Teams'!"
+        }
+    }
+    # Check if any other IM providers are present and not Teams
+    foreach ($provider in $imProviders) {
+        if ($provider.Name -and $provider.Name -ne 'Teams') {
+            $conflicts += "Other IM provider found: $($provider.Name) (Publisher: $($provider.Publisher), Path: $($provider.Path))"
+        }
+    }
+    return $conflicts
+}
+
+# Conflict analysis and summary
+Write-Output "\nAnalyzing for conflicts with Teams as default chat app..."
+$conflicts = Test-IMProviderConflicts -defaultChatAppSettings $defaultChatAppSettings -imProviders $imProviders
+if ($conflicts.Count -gt 0) {
+    Write-Output "\nCONFLICTS DETECTED:"
+    $conflicts | ForEach-Object { Write-Output $_ }
+} else {
+    Write-Output "No conflicts detected. Teams appears to be set as the default chat app."
 }
