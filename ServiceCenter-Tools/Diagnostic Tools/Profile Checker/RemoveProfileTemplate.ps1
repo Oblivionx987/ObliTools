@@ -106,3 +106,38 @@ Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-
 
 
 
+
+
+
+
+Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-448539723-362288127-725345543-1066780" -Recurse
+Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-448539723-362288127-725345543-1047808" -Recurse
+Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-448539723-362288127-725345543-1035443.bak" -Recurse
+Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-448539723-362288127-725345543-1035443" -Recurse
+Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-1851202536-4054275721-1027648328-92217" -Recurse
+Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-1851202536-4054275721-1027648328-85622" -Recurse
+Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-1851202536-4054275721-1027648328-78223" -Recurse
+Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-1851202536-4054275721-1027648328-75061" -Recurse
+Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-1851202536-4054275721-1027648328-62911" -Recurse
+Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-1851202536-4054275721-1027648328-62378" -Recurse
+Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-1851202536-4054275721-1027648328-62373" -Recurse
+Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-1851202536-4054275721-1027648328-62343.bak" -Recurse
+Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-1851202536-4054275721-1027648328-48197" -Recurse
+
+
+
+
+
+
+
+
+
+
+
+
+
+Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-448539723-362288127-725345543-1087029" -Recurse
+Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-448539723-362288127-725345543-1085817" -Recurse
+Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-1851202536-4054275721-1027648328-75061" -Recurse
+Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-1851202536-4054275721-1027648328-48197" -Recurse
+Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-448539723-362288127-725345543-1087029" -Recurse
